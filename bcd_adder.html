@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BCD Adder</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap");
+      :root {
+        --bg: #0c0f0a;
+        --panel: #111408;
+        --border: #2a3010;
+        --green: #7fff00;
+        --lime: #b5e853;
+        --yellow: #ffd600;
+        --orange: #ff8c00;
+        --red: #ff4444;
+        --blue: #4fc3f7;
+        --purple: #ce93d8;
+        --text: #d0e8c0;
+        --dim: #4a5a3a;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: var(--bg);
+        font-family: "Share Tech Mono", monospace;
+        color: var(--text);
+        min-height: 100vh;
+        padding: 20px;
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: linear-gradient(
+            rgba(127, 255, 0, 0.02) 1px,
+            transparent 1px
+          ),
+          linear-gradient(90deg, rgba(127, 255, 0, 0.02) 1px, transparent 1px);
+        background-size: 35px 35px;
+        pointer-events: none;
+      }
+      .container {
+        max-width: 1050px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 1;
+      }
+      h1 {
+        font-family: "Orbitron", sans-serif;
+        font-size: 1.5rem;
+        font-weight: 900;
+        color: var(--green);
+        text-align: center;
+        letter-spacing: 4px;
+        text-shadow: 0 0 30px rgba(127, 255, 0, 0.5);
+        margin-bottom: 4px;
+      }
+      .sub {
+        text-align: center;
+        color: var(--dim);
+        font-size: 0.72rem;
+        letter-spacing: 3px;
+        margin-bottom: 26px;
+      }
+
+      .svg-wrap {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 20px;
+        box-shadow: 0 0 40px rgba(127, 255, 0, 0.04);
+      }
+      svg {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      /* examples grid */
+      .examples {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+        margin-bottom: 20px;
+      }
+      .ex-card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px 16px;
+        position: relative;
+        overflow: hidden;
+      }
+      .ex-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+      }
+      .ex-card.valid::before {
+        background: var(--green);
+      }
+      .ex-card.invalid::before {
+        background: var(--red);
+      }
+      .ex-card.overflow::before {
+        background: var(--orange);
+      }
+      .ex-title {
+        font-family: "Orbitron", sans-serif;
+        font-size: 0.6rem;
+        letter-spacing: 2px;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+      }
+      .ex-card.valid .ex-title {
+        color: var(--green);
+      }
+      .ex-card.invalid .ex-title {
+        color: var(--red);
+      }
+      .ex-card.overflow .ex-title {
+        color: var(--orange);
+      }
+      .ex-body {
+        font-size: 0.8rem;
+        line-height: 1.9;
+      }
+      .hl-green {
+        color: var(--green);
+      }
+      .hl-red {
+        color: var(--red);
+      }
+      .hl-orange {
+        color: var(--orange);
+      }
+      .hl-blue {
+        color: var(--blue);
+      }
+      .hl-yellow {
+        color: var(--yellow);
+      }
+      .hl-purple {
+        color: var(--purple);
+      }
+      .divider {
+        border-top: 1px solid var(--dim);
+        margin: 6px 0;
+        opacity: 0.4;
+      }
+
+      /* correction logic */
+      .correction {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 16px 20px;
+        display: flex;
+        gap: 30px;
+        flex-wrap: wrap;
+      }
+      .cor-section {
+        flex: 1;
+        min-width: 200px;
+      }
+      .cor-label {
+        font-family: "Orbitron", sans-serif;
+        font-size: 0.6rem;
+        letter-spacing: 2px;
+        color: var(--yellow);
+        margin-bottom: 10px;
+      }
+      .cor-body {
+        font-size: 0.82rem;
+        line-height: 2;
+      }
+
+      @media (max-width: 640px) {
+        .examples {
+          grid-template-columns: 1fr;
+        }
+        h1 {
+          font-size: 1.1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>BCD ADDER</h1>
+      <p class="sub">
+        BINARY CODED DECIMAL · CORRECTION LOGIC · DIGITAL ARITHMETIC
+      </p>
+
+      <div class="svg-wrap">
+        <svg viewBox="0 0 980 640" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker
+              id="a"
+              markerWidth="8"
+              markerHeight="6"
+              refX="7"
+              refY="3"
+              orient="auto"
+            >
+              <polygon points="0 0,8 3,0 6" fill="#4a5a3a" />
+            </marker>
+            <marker
+              id="ag"
+              markerWidth="8"
+              markerHeight="6"
+              refX="7"
+              refY="3"
+              orient="auto"
+            >
+              <polygon points="0 0,8 3,0 6" fill="#7fff00" />
+            </marker>
+            <marker
+              id="ay"
+              markerWidth="8"
+              markerHeight="6"
+              refX="7"
+              refY="3"
+              orient="auto"
+            >
+              <polygon points="0 0,8 3,0 6" fill="#ffd600" />
+            </marker>
+            <marker
+              id="ar"
+              markerWidth="8"
+              markerHeight="6"
+              refX="7"
+              refY="3"
+              orient="auto"
+            >
+              <polygon points="0 0,8 3,0 6" fill="#ff4444" />
+            </marker>
+            <marker
+              id="ao"
+              markerWidth="8"
+              markerHeight="6"
+              refX="7"
+              refY="3"
+              orient="auto"
+            >
+              <polygon points="0 0,8 3,0 6" fill="#ff8c00" />
+            </marker>
+            <marker
+              id="ab"
+              markerWidth="8"
+              markerHeight="6"
+              refX="7"
+              refY="3"
+              orient="auto"
+            >
+              <polygon points="0 0,8 3,0 6" fill="#4fc3f7" />
+            </marker>
+            <marker
+              id="ap"
+              markerWidth="8"
+              markerHeight="6"
+              refX="7"
+              refY="3"
+              orient="auto"
+            >
+              <polygon points="0 0,8 3,0 6" fill="#ce93d8" />
+            </marker>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="3" result="b" />
+              <feComposite in="SourceGraphic" in2="b" operator="over" />
+            </filter>
+          </defs>
+          <rect width="980" height="640" fill="#0c0f0a" rx="8" />
+
+          <!-- ══════ INPUTS ROW ══════ -->
+          <!-- A label group -->
+          <g font-family="'Share Tech Mono',monospace" font-size="13">
+            <text x="155" y="30" text-anchor="middle" fill="#ffd600">A₃</text>
+            <text x="195" y="30" text-anchor="middle" fill="#ffd600">A₂</text>
+            <text x="235" y="30" text-anchor="middle" fill="#ffd600">A₁</text>
+            <text x="275" y="30" text-anchor="middle" fill="#ffd600">A₀</text>
+            <text x="375" y="30" text-anchor="middle" fill="#ff8c00">B₃</text>
+            <text x="415" y="30" text-anchor="middle" fill="#ff8c00">B₂</text>
+            <text x="455" y="30" text-anchor="middle" fill="#ff8c00">B₁</text>
+            <text x="495" y="30" text-anchor="middle" fill="#ff8c00">B₀</text>
+            <text x="620" y="30" text-anchor="middle" fill="#ff4444">Cᵢₙ</text>
+          </g>
+          <!-- bracket for A -->
+          <rect
+            x="130"
+            y="36"
+            width="170"
+            height="22"
+            rx="4"
+            fill="none"
+            stroke="#ffd600"
+            stroke-width="1"
+            stroke-dasharray="3,2"
+          />
+          <text
+            x="215"
+            y="50"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="9"
+            fill="#ffd600"
+          >
+            4-bit BCD digit A
+          </text>
+          <!-- bracket for B -->
+          <rect
+            x="350"
+            y="36"
+            width="170"
+            height="22"
+            rx="4"
+            fill="none"
+            stroke="#ff8c00"
+            stroke-width="1"
+            stroke-dasharray="3,2"
+          />
+          <text
+            x="435"
+            y="50"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="9"
+            fill="#ff8c00"
+          >
+            4-bit BCD digit B
+          </text>
+
+          <!-- Input lines down -->
+          <g stroke="#2a3010" stroke-width="1.5" stroke-dasharray="4,3">
+            <line x1="155" y1="58" x2="155" y2="108" />
+            <line x1="195" y1="58" x2="195" y2="108" />
+            <line x1="235" y1="58" x2="235" y2="108" />
+            <line x1="275" y1="58" x2="275" y2="108" />
+            <line x1="375" y1="58" x2="375" y2="108" />
+            <line x1="415" y1="58" x2="415" y2="108" />
+            <line x1="455" y1="58" x2="455" y2="108" />
+            <line x1="495" y1="58" x2="495" y2="108" />
+          </g>
+          <line
+            x1="620"
+            y1="34"
+            x2="620"
+            y2="108"
+            stroke="#ff4444"
+            stroke-width="1.5"
+            stroke-dasharray="4,3"
+          />
+
+          <!-- ══════ STAGE 1: 4-BIT BINARY ADDER ══════ -->
+          <rect
+            x="100"
+            y="108"
+            width="570"
+            height="80"
+            rx="8"
+            fill="#111408"
+            stroke="#4fc3f7"
+            stroke-width="2"
+          />
+          <rect
+            x="100"
+            y="108"
+            width="570"
+            height="4"
+            rx="2"
+            fill="#4fc3f7"
+            opacity=".7"
+          />
+          <text
+            x="385"
+            y="130"
+            text-anchor="middle"
+            font-family="'Orbitron',sans-serif"
+            font-size="11"
+            fill="#4fc3f7"
+            letter-spacing="3"
+            font-weight="700"
+          >
+            STAGE 1 : 4-BIT BINARY ADDER
+          </text>
+          <text
+            x="385"
+            y="152"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="10"
+            fill="#4a5a3a"
+          >
+            Performs normal binary addition of A + B + Cᵢₙ
+          </text>
+          <text
+            x="385"
+            y="170"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="10"
+            fill="#4a5a3a"
+          >
+            Output: S₃ S₂ S₁ S₀ (4-bit sum) + C₄ (carry out)
+          </text>
+
+          <!-- Stage 1 output lines -->
+          <!-- S3 S2 S1 S0 lines down -->
+          <line
+            x1="200"
+            y1="188"
+            x2="200"
+            y2="258"
+            stroke="#7fff00"
+            stroke-width="2"
+            marker-end="url(#ag)"
+          />
+          <line
+            x1="280"
+            y1="188"
+            x2="280"
+            y2="258"
+            stroke="#7fff00"
+            stroke-width="2"
+            marker-end="url(#ag)"
+          />
+          <line
+            x1="360"
+            y1="188"
+            x2="360"
+            y2="258"
+            stroke="#7fff00"
+            stroke-width="2"
+            marker-end="url(#ag)"
+          />
+          <line
+            x1="440"
+            y1="188"
+            x2="440"
+            y2="258"
+            stroke="#7fff00"
+            stroke-width="2"
+            marker-end="url(#ag)"
+          />
+          <!-- C4 line up-right to correction block -->
+          <line
+            x1="610"
+            y1="188"
+            x2="610"
+            y2="258"
+            stroke="#ff4444"
+            stroke-width="2.5"
+            marker-end="url(#ar)"
+          />
+
+          <!-- Labels -->
+          <g font-family="'Share Tech Mono',monospace" font-size="11">
+            <text x="192" y="226" fill="#7fff00">S₃</text>
+            <text x="272" y="226" fill="#7fff00">S₂</text>
+            <text x="352" y="226" fill="#7fff00">S₁</text>
+            <text x="432" y="226" fill="#7fff00">S₀</text>
+            <text x="618" y="230" fill="#ff4444">C₄</text>
+          </g>
+
+          <!-- ══════ CORRECTION DETECTOR ══════ -->
+          <rect
+            x="530"
+            y="258"
+            width="210"
+            height="90"
+            rx="8"
+            fill="#111408"
+            stroke="#ffd600"
+            stroke-width="1.5"
+          />
+          <text
+            x="635"
+            y="278"
+            text-anchor="middle"
+            font-family="'Orbitron',sans-serif"
+            font-size="10"
+            fill="#ffd600"
+            letter-spacing="2"
+          >
+            CORRECTION DETECTOR
+          </text>
+          <text
+            x="635"
+            y="300"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="10.5"
+            fill="#ffd600"
+          >
+            K = C₄ + S₃·S₂ + S₃·S₁
+          </text>
+          <text
+            x="635"
+            y="318"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="9"
+            fill="#4a5a3a"
+          >
+            If K=1 → result &gt; 9 → invalid BCD
+          </text>
+          <text
+            x="635"
+            y="334"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="9"
+            fill="#4a5a3a"
+          >
+            Must add 0110 (6) to correct
+          </text>
+
+          <!-- S3 S2 S1 taps to correction detector -->
+          <line
+            x1="200"
+            y1="220"
+            x2="200"
+            y2="240"
+            stroke="#7fff00"
+            stroke-width="1"
+          />
+          <line
+            x1="200"
+            y1="240"
+            x2="540"
+            y2="240"
+            stroke="#7fff00"
+            stroke-width="1"
+            stroke-dasharray="3,2"
+          />
+          <line
+            x1="540"
+            y1="240"
+            x2="540"
+            y2="258"
+            stroke="#7fff00"
+            stroke-width="1"
+            marker-end="url(#ag)"
+          />
+          <line
+            x1="280"
+            y1="220"
+            x2="280"
+            y2="244"
+            stroke="#7fff00"
+            stroke-width="1"
+          />
+          <line
+            x1="280"
+            y1="244"
+            x2="560"
+            y2="244"
+            stroke="#7fff00"
+            stroke-width="1"
+            stroke-dasharray="3,2"
+          />
+          <line
+            x1="560"
+            y1="244"
+            x2="560"
+            y2="258"
+            stroke="#7fff00"
+            stroke-width="1"
+            marker-end="url(#ag)"
+          />
+          <!-- labels on taps -->
+          <text
+            x="370"
+            y="238"
+            font-family="'Share Tech Mono',monospace"
+            font-size="9"
+            fill="#7fff00"
+          >
+            S₃ tap
+          </text>
+          <text
+            x="370"
+            y="254"
+            font-family="'Share Tech Mono',monospace"
+            font-size="9"
+            fill="#7fff00"
+          >
+            S₂ tap
+          </text>
+
+          <!-- K output from detector -->
+          <line
+            x1="635"
+            y1="348"
+            x2="635"
+            y2="400"
+            stroke="#ffd600"
+            stroke-width="2"
+            marker-end="url(#ay)"
+          />
+          <text
+            x="643"
+            y="380"
+            font-family="'Share Tech Mono',monospace"
+            font-size="11"
+            fill="#ffd600"
+          >
+            K
+          </text>
+
+          <!-- ══════ MUX / CORRECTION SELECTOR ══════ -->
+          <!-- Shows: if K=1 add 0110, else add 0000 -->
+          <rect
+            x="530"
+            y="400"
+            width="210"
+            height="80"
+            rx="8"
+            fill="#111408"
+            stroke="#ff8c00"
+            stroke-width="1.5"
+          />
+          <text
+            x="635"
+            y="420"
+            text-anchor="middle"
+            font-family="'Orbitron',sans-serif"
+            font-size="9"
+            fill="#ff8c00"
+            letter-spacing="2"
+          >
+            CORRECTION MUX
+          </text>
+          <text
+            x="635"
+            y="440"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="10.5"
+            fill="#ff8c00"
+          >
+            K=1 → add 0110
+          </text>
+          <text
+            x="635"
+            y="458"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="10.5"
+            fill="#4a5a3a"
+          >
+            K=0 → add 0000
+          </text>
+          <text
+            x="635"
+            y="474"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="9"
+            fill="#4a5a3a"
+          >
+            (no correction needed)
+          </text>
+
+          <!-- K=1/0 annotation -->
+          <rect
+            x="750"
+            y="408"
+            width="155"
+            height="52"
+            rx="5"
+            fill="#0c0f0a"
+            stroke="#2a3010"
+            stroke-width="1"
+          />
+          <text
+            x="827"
+            y="424"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="9"
+            fill="#4a5a3a"
+          >
+            Correction value:
+          </text>
+          <text
+            x="827"
+            y="442"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="11"
+            fill="#ff8c00"
+          >
+            0 1 1 0
+          </text>
+          <text
+            x="827"
+            y="456"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="9"
+            fill="#ff8c00"
+          >
+            (decimal 6)
+          </text>
+          <line
+            x1="750"
+            y1="440"
+            x2="740"
+            y2="440"
+            stroke="#ff8c00"
+            stroke-width="1"
+            stroke-dasharray="3,2"
+          />
+          <line
+            x1="740"
+            y1="440"
+            x2="740"
+            y2="440"
+            stroke="#ff8c00"
+            stroke-width="1"
+          />
+
+          <!-- Arrow from MUX down to Stage 2 adder -->
+          <line
+            x1="635"
+            y1="480"
+            x2="635"
+            y2="520"
+            stroke="#ff8c00"
+            stroke-width="2"
+            marker-end="url(#ao)"
+          />
+          <text
+            x="643"
+            y="505"
+            font-family="'Share Tech Mono',monospace"
+            font-size="9"
+            fill="#ff8c00"
+          >
+            0110 / 0000
+          </text>
+
+          <!-- ══════ STAGE 1 SUM LINES continuing down ══════ -->
+          <line
+            x1="200"
+            y1="258"
+            x2="200"
+            y2="520"
+            stroke="#7fff00"
+            stroke-width="2"
+            marker-end="url(#ag)"
+          />
+          <line
+            x1="280"
+            y1="258"
+            x2="280"
+            y2="520"
+            stroke="#7fff00"
+            stroke-width="2"
+            marker-end="url(#ag)"
+          />
+          <line
+            x1="360"
+            y1="258"
+            x2="360"
+            y2="520"
+            stroke="#7fff00"
+            stroke-width="2"
+            marker-end="url(#ag)"
+          />
+          <line
+            x1="440"
+            y1="258"
+            x2="440"
+            y2="520"
+            stroke="#7fff00"
+            stroke-width="2"
+            marker-end="url(#ag)"
+          />
+          <!-- labels mid -->
+          <g
+            font-family="'Share Tech Mono',monospace"
+            font-size="10"
+            fill="#7fff00"
+            opacity=".7"
+          >
+            <text x="204" y="390">S₃</text>
+            <text x="284" y="390">S₂</text>
+            <text x="364" y="390">S₁</text>
+            <text x="444" y="390">S₀</text>
+          </g>
+
+          <!-- ══════ STAGE 2: 4-BIT BINARY ADDER ══════ -->
+          <rect
+            x="100"
+            y="520"
+            width="570"
+            height="72"
+            rx="8"
+            fill="#111408"
+            stroke="#ce93d8"
+            stroke-width="2"
+          />
+          <rect
+            x="100"
+            y="520"
+            width="570"
+            height="4"
+            rx="2"
+            fill="#ce93d8"
+            opacity=".7"
+          />
+          <text
+            x="385"
+            y="542"
+            text-anchor="middle"
+            font-family="'Orbitron',sans-serif"
+            font-size="11"
+            fill="#ce93d8"
+            letter-spacing="3"
+            font-weight="700"
+          >
+            STAGE 2 : CORRECTION ADDER
+          </text>
+          <text
+            x="385"
+            y="562"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="10"
+            fill="#4a5a3a"
+          >
+            Adds correction value (0110 or 0000) to S₃S₂S₁S₀
+          </text>
+          <text
+            x="385"
+            y="578"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="10"
+            fill="#4a5a3a"
+          >
+            Output: Final BCD sum digit + Carry out
+          </text>
+
+          <!-- Final output lines -->
+          <line
+            x1="200"
+            y1="592"
+            x2="200"
+            y2="625"
+            stroke="#ce93d8"
+            stroke-width="2"
+            marker-end="url(#ap)"
+          />
+          <line
+            x1="280"
+            y1="592"
+            x2="280"
+            y2="625"
+            stroke="#ce93d8"
+            stroke-width="2"
+            marker-end="url(#ap)"
+          />
+          <line
+            x1="360"
+            y1="592"
+            x2="360"
+            y2="625"
+            stroke="#ce93d8"
+            stroke-width="2"
+            marker-end="url(#ap)"
+          />
+          <line
+            x1="440"
+            y1="592"
+            x2="440"
+            y2="625"
+            stroke="#ce93d8"
+            stroke-width="2"
+            marker-end="url(#ap)"
+          />
+          <!-- Carry out final -->
+          <line
+            x1="590"
+            y1="592"
+            x2="590"
+            y2="625"
+            stroke="#ff4444"
+            stroke-width="2.5"
+            marker-end="url(#ar)"
+          />
+
+          <g
+            font-family="'Share Tech Mono',monospace"
+            font-size="13"
+            font-weight="bold"
+          >
+            <text x="200" y="640" text-anchor="middle" fill="#ce93d8">Σ₃</text>
+            <text x="280" y="640" text-anchor="middle" fill="#ce93d8">Σ₂</text>
+            <text x="360" y="640" text-anchor="middle" fill="#ce93d8">Σ₁</text>
+            <text x="440" y="640" text-anchor="middle" fill="#ce93d8">Σ₀</text>
+            <text
+              x="590"
+              y="634"
+              text-anchor="middle"
+              fill="#ff4444"
+              font-size="11"
+            >
+              Cout
+            </text>
+          </g>
+
+          <!-- ══════ SIDE ANNOTATIONS ══════ -->
+          <!-- Valid/Invalid zone annotation -->
+          <rect
+            x="810"
+            y="108"
+            width="160"
+            height="160"
+            rx="6"
+            fill="#0c0f0a"
+            stroke="#2a3010"
+            stroke-width="1"
+          />
+          <text
+            x="890"
+            y="126"
+            text-anchor="middle"
+            font-family="'Orbitron',sans-serif"
+            font-size="9"
+            fill="#4a5a3a"
+            letter-spacing="1"
+          >
+            BCD VALIDITY
+          </text>
+          <line
+            x1="820"
+            y1="133"
+            x2="960"
+            y2="133"
+            stroke="#2a3010"
+            stroke-width="1"
+          />
+          <g font-family="'Share Tech Mono',monospace" font-size="10">
+            <text x="820" y="150" fill="#7fff00">0000–1001</text>
+            <text x="820" y="165" fill="#7fff00">(0–9)</text>
+            <text x="820" y="180" fill="#7fff00">✓ VALID BCD</text>
+            <line
+              x1="820"
+              y1="188"
+              x2="960"
+              y2="188"
+              stroke="#2a3010"
+              stroke-width="1"
+            />
+            <text x="820" y="204" fill="#ff4444">1010–1111</text>
+            <text x="820" y="219" fill="#ff4444">(10–15)</text>
+            <text x="820" y="234" fill="#ff4444">✗ INVALID BCD</text>
+            <text x="820" y="252" fill="#ffd600">→ Add 0110!</text>
+          </g>
+
+          <!-- Why +6 note -->
+          <rect
+            x="810"
+            y="290"
+            width="160"
+            height="100"
+            rx="6"
+            fill="#0c0f0a"
+            stroke="#2a3010"
+            stroke-width="1"
+          />
+          <text
+            x="890"
+            y="308"
+            text-anchor="middle"
+            font-family="'Orbitron',sans-serif"
+            font-size="9"
+            fill="#4a5a3a"
+            letter-spacing="1"
+          >
+            WHY ADD 6?
+          </text>
+          <line
+            x1="820"
+            y1="314"
+            x2="960"
+            y2="314"
+            stroke="#2a3010"
+            stroke-width="1"
+          />
+          <g
+            font-family="'Share Tech Mono',monospace"
+            font-size="9"
+            fill="#4a5a3a"
+          >
+            <text x="820" y="330">BCD uses 10 of</text>
+            <text x="820" y="345">16 combinations.</text>
+            <text x="820" y="360">6 states skipped.</text>
+            <text x="820" y="375">Adding 6 jumps</text>
+            <text x="820" y="385" fill="#ffd600">over invalid zone.</text>
+          </g>
+
+          <!-- Cout note -->
+          <rect
+            x="810"
+            y="412"
+            width="160"
+            height="70"
+            rx="6"
+            fill="#0c0f0a"
+            stroke="#2a3010"
+            stroke-width="1"
+          />
+          <text
+            x="890"
+            y="430"
+            text-anchor="middle"
+            font-family="'Orbitron',sans-serif"
+            font-size="9"
+            fill="#4a5a3a"
+            letter-spacing="1"
+          >
+            CARRY OUT
+          </text>
+          <line
+            x1="820"
+            y1="436"
+            x2="960"
+            y2="436"
+            stroke="#2a3010"
+            stroke-width="1"
+          />
+          <g
+            font-family="'Share Tech Mono',monospace"
+            font-size="9"
+            fill="#4a5a3a"
+          >
+            <text x="820" y="450">Cout = K (correction</text>
+            <text x="820" y="463">flag) OR Stage2 carry</text>
+            <text x="820" y="476" fill="#ff4444">Goes to next digit.</text>
+          </g>
+
+          <!-- title watermark -->
+          <text
+            x="980"
+            y="320"
+            font-family="'Orbitron',sans-serif"
+            font-size="8"
+            fill="#2a3010"
+            transform="rotate(90,980,320)"
+            letter-spacing="4"
+          >
+            BCD ADDER — DIGITAL LOGIC
+          </text>
+        </svg>
+      </div>
+
+      <!-- WORKED EXAMPLES -->
+      <div class="examples">
+        <div class="ex-card valid">
+          <div class="ex-title">✅ Example 1 — No Correction</div>
+          <div class="ex-body">
+            <span class="hl-yellow">5</span> + <span class="hl-orange">4</span
+            ><br />
+            <span class="hl-yellow">0101</span> +
+            <span class="hl-orange">0100</span><br />
+            <div class="divider"></div>
+            Stage 1: <span class="hl-green">1001</span> (= 9)<br />
+            C₄ = 0, S₃·S₂ = 0<br />
+            <span class="hl-green">K = 0 → No correction</span><br />
+            <div class="divider"></div>
+            Result: <span class="hl-purple">1001 = 9 ✓</span>
+          </div>
+        </div>
+        <div class="ex-card invalid">
+          <div class="ex-title">❌ Example 2 — Correction Needed</div>
+          <div class="ex-body">
+            <span class="hl-yellow">6</span> + <span class="hl-orange">7</span
+            ><br />
+            <span class="hl-yellow">0110</span> +
+            <span class="hl-orange">0111</span><br />
+            <div class="divider"></div>
+            Stage 1: <span class="hl-red">1101</span> (=13, invalid!)<br />
+            S₃·S₂ = 1 → <span class="hl-red">K = 1</span><br />
+            Add 0110: 1101+0110<br />
+            <div class="divider"></div>
+            Result: <span class="hl-purple">Cout=1, 0011 → "13" ✓</span>
+          </div>
+        </div>
+        <div class="ex-card overflow">
+          <div class="ex-title">⚠️ Example 3 — Carry Overflow</div>
+          <div class="ex-body">
+            <span class="hl-yellow">9</span> + <span class="hl-orange">9</span
+            ><br />
+            <span class="hl-yellow">1001</span> +
+            <span class="hl-orange">1001</span><br />
+            <div class="divider"></div>
+            Stage 1: <span class="hl-red">C₄=1</span>, sum=0010<br />
+            C₄=1 → <span class="hl-orange">K = 1</span><br />
+            Add 0110: 10010+0110<br />
+            <div class="divider"></div>
+            Result: <span class="hl-purple">Cout=1, 1000 → "18" ✓</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CORRECTION LOGIC SUMMARY -->
+      <div class="correction">
+        <div class="cor-section">
+          <div class="cor-label">Correction Condition (K)</div>
+          <div class="cor-body">
+            <span style="color: #ffd600">K = C₄ + S₃·S₂ + S₃·S₁</span><br />
+            <span style="color: #4a5a3a">C₄=1</span> → sum ≥ 16 (overflow)<br />
+            <span style="color: #4a5a3a">S₃·S₂=1</span> → sum is 12–15<br />
+            <span style="color: #4a5a3a">S₃·S₁=1</span> → sum is 10–11
+          </div>
+        </div>
+        <div class="cor-section">
+          <div class="cor-label">Gate Implementation</div>
+          <div class="cor-body">
+            <span style="color: #7fff00">AND gate 1:</span> S₃ · S₂<br />
+            <span style="color: #7fff00">AND gate 2:</span> S₃ · S₁<br />
+            <span style="color: #ffd600">OR gate:</span> C₄ + (S₃S₂) + (S₃S₁)<br />
+            <span style="color: #ce93d8">K controls:</span> add 0110 or 0000
+          </div>
+        </div>
+        <div class="cor-section">
+          <div class="cor-label">Final Carry Out</div>
+          <div class="cor-body">
+            <span style="color: #ff4444">Cout = K</span><br />
+            (The correction flag itself becomes<br />
+            the carry to the next BCD digit)<br />
+            <span style="color: #4a5a3a">Multi-digit: chain BCD adders</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
