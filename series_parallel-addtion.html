@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Series & Parallel Addition</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap");
+      :root {
+        --bg: #0e0a14;
+        --panel: #130e1c;
+        --border: #2a1e40;
+        --purple: #b06cff;
+        --violet: #7c3aed;
+        --pink: #f472b6;
+        --cyan: #22d3ee;
+        --green: #4ade80;
+        --yellow: #facc15;
+        --orange: #fb923c;
+        --red: #f87171;
+        --text: #e2d9f3;
+        --dim: #4a3a6a;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: var(--bg);
+        font-family: "JetBrains Mono", monospace;
+        color: var(--text);
+        min-height: 100vh;
+        padding: 20px;
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(
+            ellipse at 20% 50%,
+            rgba(124, 58, 237, 0.05) 0%,
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse at 80% 20%,
+            rgba(34, 211, 238, 0.04) 0%,
+            transparent 50%
+          );
+        pointer-events: none;
+      }
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 1;
+      }
+      h1 {
+        font-family: "Orbitron", sans-serif;
+        font-size: 1.5rem;
+        font-weight: 900;
+        color: var(--purple);
+        text-align: center;
+        letter-spacing: 4px;
+        text-shadow: 0 0 30px rgba(176, 108, 255, 0.5);
+        margin-bottom: 4px;
+      }
+      .sub {
+        text-align: center;
+        color: var(--dim);
+        font-size: 0.72rem;
+        letter-spacing: 3px;
+        margin-bottom: 26px;
+      }
+
+      .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+        margin-bottom: 20px;
+      }
+
+      .diagram-box {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .box-header {
+        padding: 12px 18px;
+        font-family: "Orbitron", sans-serif;
+        font-size: 0.75rem;
+        letter-spacing: 3px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .box-header.serial {
+        background: linear-gradient(
+          90deg,
+          rgba(251, 146, 60, 0.15),
+          transparent
+        );
+        color: var(--orange);
+        border-bottom: 1px solid rgba(251, 146, 60, 0.2);
+      }
+      .box-header.parallel {
+        background: linear-gradient(
+          90deg,
+          rgba(34, 211, 238, 0.12),
+          transparent
+        );
+        color: var(--cyan);
+        border-bottom: 1px solid rgba(34, 211, 238, 0.2);
+      }
+      .box-inner {
+        padding: 16px;
+      }
+
+      svg {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      /* comparison table */
+      .compare {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 20px;
+      }
+      .compare-header {
+        padding: 12px 20px;
+        font-family: "Orbitron", sans-serif;
+        font-size: 0.75rem;
+        letter-spacing: 3px;
+        color: var(--yellow);
+        background: linear-gradient(
+          90deg,
+          rgba(250, 204, 21, 0.1),
+          transparent
+        );
+        border-bottom: 1px solid rgba(250, 204, 21, 0.15);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.78rem;
+      }
+      th {
+        padding: 10px 16px;
+        text-align: left;
+        color: var(--dim);
+        border-bottom: 1px solid var(--border);
+        font-weight: 400;
+        letter-spacing: 1px;
+      }
+      td {
+        padding: 10px 16px;
+        border-bottom: 1px solid rgba(42, 30, 64, 0.5);
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      td:first-child {
+        color: var(--text);
+      }
+      td.serial-val {
+        color: var(--orange);
+      }
+      td.parallel-val {
+        color: var(--cyan);
+      }
+      tr:hover td {
+        background: rgba(176, 108, 255, 0.04);
+      }
+
+      /* timing diagram */
+      .timing {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .timing-header {
+        padding: 12px 20px;
+        font-family: "Orbitron", sans-serif;
+        font-size: 0.75rem;
+        letter-spacing: 3px;
+        color: var(--green);
+        background: linear-gradient(
+          90deg,
+          rgba(74, 222, 128, 0.1),
+          transparent
+        );
+        border-bottom: 1px solid rgba(74, 222, 128, 0.15);
+      }
+
+      @media (max-width: 700px) {
+        .two-col {
+          grid-template-columns: 1fr;
+        }
+        h1 {
+          font-size: 1.1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>SERIES & PARALLEL ADDITION</h1>
+      <p class="sub">
+        SEQUENTIAL vs COMBINATIONAL · DIGITAL ARITHMETIC · 4-BIT
+      </p>
+
+      <div class="two-col">
+        <!-- ═══ SERIAL ADDER ═══ -->
+        <div class="diagram-box">
+          <div class="box-header serial">⏱ SERIAL ADDER</div>
+          <div class="box-inner">
+            <svg viewBox="0 0 480 420" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker
+                  id="ao"
+                  markerWidth="7"
+                  markerHeight="5"
+                  refX="6"
+                  refY="2.5"
+                  orient="auto"
+                >
+                  <polygon points="0 0,7 2.5,0 5" fill="#fb923c" />
+                </marker>
+                <marker
+                  id="ac"
+                  markerWidth="7"
+                  markerHeight="5"
+                  refX="6"
+                  refY="2.5"
+                  orient="auto"
+                >
+                  <polygon points="0 0,7 2.5,0 5" fill="#22d3ee" />
+                </marker>
+                <marker
+                  id="ag"
+                  markerWidth="7"
+                  markerHeight="5"
+                  refX="6"
+                  refY="2.5"
+                  orient="auto"
+                >
+                  <polygon points="0 0,7 2.5,0 5" fill="#4ade80" />
+                </marker>
+                <marker
+                  id="ay"
+                  markerWidth="7"
+                  markerHeight="5"
+                  refX="6"
+                  refY="2.5"
+                  orient="auto"
+                >
+                  <polygon points="0 0,7 2.5,0 5" fill="#facc15" />
+                </marker>
+                <marker
+                  id="ap"
+                  markerWidth="7"
+                  markerHeight="5"
+                  refX="6"
+                  refY="2.5"
+                  orient="auto"
+                >
+                  <polygon points="0 0,7 2.5,0 5" fill="#f472b6" />
+                </marker>
+                <marker
+                  id="adim"
+                  markerWidth="7"
+                  markerHeight="5"
+                  refX="6"
+                  refY="2.5"
+                  orient="auto"
+                >
+                  <polygon points="0 0,7 2.5,0 5" fill="#4a3a6a" />
+                </marker>
+              </defs>
+              <rect width="480" height="420" fill="#130e1c" />
+
+              <!-- Register A -->
+              <rect
+                x="20"
+                y="30"
+                width="200"
+                height="44"
+                rx="6"
+                fill="#0e0a14"
+                stroke="#fb923c"
+                stroke-width="1.5"
+              />
+              <text
+                x="120"
+                y="48"
+                text-anchor="middle"
+                font-family="'Orbitron',sans-serif"
+                font-size="9"
+                fill="#fb923c"
+                letter-spacing="2"
+              >
+                SHIFT REGISTER A
+              </text>
+              <g font-family="'JetBrains Mono',monospace" font-size="11">
+                <rect
+                  x="28"
+                  y="54"
+                  width="32"
+                  height="16"
+                  rx="3"
+                  fill="#1a0e28"
+                  stroke="#fb923c"
+                  stroke-width="1"
+                />
+                <text x="44" y="66" text-anchor="middle" fill="#fb923c">
+                  A₃
+                </text>
+                <rect
+                  x="68"
+                  y="54"
+                  width="32"
+                  height="16"
+                  rx="3"
+                  fill="#1a0e28"
+                  stroke="#fb923c"
+                  stroke-width="1"
+                />
+                <text x="84" y="66" text-anchor="middle" fill="#fb923c">
+                  A₂
+                </text>
+                <rect
+                  x="108"
+                  y="54"
+                  width="32"
+                  height="16"
+                  rx="3"
+                  fill="#1a0e28"
+                  stroke="#fb923c"
+                  stroke-width="1"
+                />
+                <text x="124" y="66" text-anchor="middle" fill="#fb923c">
+                  A₁
+                </text>
+                <rect
+                  x="148"
+                  y="54"
+                  width="32"
+                  height="16"
+                  rx="3"
+                  fill="#2a1500"
+                  stroke="#facc15"
+                  stroke-width="1.5"
+                />
+                <text x="164" y="66" text-anchor="middle" fill="#facc15">
+                  A₀
+                </text>
+              </g>
+              <!-- shift arrow -->
+              <text
+                x="195"
+                y="48"
+                font-family="'JetBrains Mono',monospace"
+                font-size="18"
+                fill="#fb923c"
+              >
+                →
+              </text>
+
+              <!-- Register B -->
+              <rect
+                x="20"
+                y="100"
+                width="200"
+                height="44"
+                rx="6"
+                fill="#0e0a14"
+                stroke="#22d3ee"
+                stroke-width="1.5"
+              />
+              <text
+                x="120"
+                y="118"
+                text-anchor="middle"
+                font-family="'Orbitron',sans-serif"
+                font-size="9"
+                fill="#22d3ee"
+                letter-spacing="2"
+              >
+                SHIFT REGISTER B
+              </text>
+              <g font-family="'JetBrains Mono',monospace" font-size="11">
+                <rect
+                  x="28"
+                  y="124"
+                  width="32"
+                  height="16"
+                  rx="3"
+                  fill="#0a1a1e"
+                  stroke="#22d3ee"
+                  stroke-width="1"
+                />
+                <text x="44" y="136" text-anchor="middle" fill="#22d3ee">
+                  B₃
+                </text>
+                <rect
+                  x="68"
+                  y="124"
+                  width="32"
+                  height="16"
+                  rx="3"
+                  fill="#0a1a1e"
+                  stroke="#22d3ee"
+                  stroke-width="1"
+                />
+                <text x="84" y="136" text-anchor="middle" fill="#22d3ee">
+                  B₂
+                </text>
+                <rect
+                  x="108"
+                  y="124"
+                  width="32"
+                  height="16"
+                  rx="3"
+                  fill="#0a1a1e"
+                  stroke="#22d3ee"
+                  stroke-width="1"
+                />
+                <text x="124" y="136" text-anchor="middle" fill="#22d3ee">
+                  B₁
+                </text>
+                <rect
+                  x="148"
+                  y="124"
+                  width="32"
+                  height="16"
+                  rx="3"
+                  fill="#001a20"
+                  stroke="#facc15"
+                  stroke-width="1.5"
+                />
+                <text x="164" y="136" text-anchor="middle" fill="#facc15">
+                  B₀
+                </text>
+              </g>
+              <text
+                x="195"
+                y="118"
+                font-family="'JetBrains Mono',monospace"
+                font-size="18"
+                fill="#22d3ee"
+              >
+                →
+              </text>
+
+              <!-- "LSB first" annotation -->
+              <text
+                x="164"
+                y="158"
+                text-anchor="middle"
+                font-family="'JetBrains Mono',monospace"
+                font-size="9"
+                fill="#facc15"
+              >
+                LSB first ↓
+              </text>
+
+              <!-- Lines from registers to FA -->
+              <line
+                x1="164"
+                y1="70"
+                x2="164"
+                y2="194"
+                stroke="#fb923c"
+                stroke-width="1.5"
+                stroke-dasharray="4,2"
+                marker-end="url(#ao)"
+              />
+              <line
+                x1="164"
+                y1="140"
+                x2="175"
+                y2="140"
+                stroke="#22d3ee"
+                stroke-width="1.5"
+              />
+              <line
+                x1="175"
+                y1="140"
+                x2="175"
+                y2="194"
+                stroke="#22d3ee"
+                stroke-width="1.5"
+                stroke-dasharray="4,2"
+                marker-end="url(#ac)"
+              />
+
+              <!-- FULL ADDER box -->
+              <rect
+                x="100"
+                y="194"
+                width="160"
+                height="70"
+                rx="8"
+                fill="#0e0a14"
+                stroke="#b06cff"
+                stroke-width="2"
+              />
+              <rect
+                x="100"
+                y="194"
+                width="160"
+                height="3"
+                rx="1"
+                fill="#b06cff"
+                opacity=".8"
+              />
+              <text
+                x="180"
+                y="212"
+                text-anchor="middle"
+                font-family="'Orbitron',sans-serif"
+                font-size="9"
+                fill="#b06cff"
+                letter-spacing="2"
+              >
+                FULL ADDER
+              </text>
+              <text
+                x="180"
+                y="232"
+                text-anchor="middle"
+                font-family="'JetBrains Mono',monospace"
+                font-size="10"
+                fill="#e2d9f3"
+              >
+                Aᵢ + Bᵢ + Cᵢₙ
+              </text>
+              <text
+                x="180"
+                y="252"
+                text-anchor="middle"
+                font-family="'JetBrains Mono',monospace"
+                font-size="9"
+                fill="#4a3a6a"
+              >
+                Single FA used each cycle
+              </text>
+
+              <!-- Sum output line -->
+              <line
+                x1="180"
+                y1="264"
+                x2="180"
+                y2="304"
+                stroke="#4ade80"
+                stroke-width="2"
+                marker-end="url(#ag)"
+              />
+              <text
+                x="188"
+                y="288"
+                font-family="'JetBrains Mono',monospace"
+                font-size="10"
+                fill="#4ade80"
+              >
+                Sᵢ
+              </text>
+
+              <!-- Carry out line to DFF -->
+              <line
+                x1="260"
+                y1="230"
+                x2="310"
+                y2="230"
+                stroke="#f472b6"
+                stroke-width="2"
+                marker-end="url(#ap)"
+              />
+              <text
+                x="273"
+                y="222"
+                font-family="'JetBrains Mono',monospace"
+                font-size="10"
+                fill="#f472b6"
+              >
+                Cout
+              </text>
+
+              <!-- D Flip-Flop -->
+              <rect
+                x="310"
+                y="208"
+                width="100"
+                height="60"
+                rx="6"
+                fill="#0e0a14"
+                stroke="#f472b6"
+                stroke-width="1.5"
+              />
+              <text
+                x="360"
+                y="226"
+                text-anchor="middle"
+                font-family="'Orbitron',sans-serif"
+                font-size="9"
+                fill="#f472b6"
+                letter-spacing="1"
+              >
+                D FLIP-FLOP
+              </text>
+              <text
+                x="360"
+                y="244"
+                text-anchor="middle"
+                font-family="'JetBrains Mono',monospace"
+                font-size="9"
+                fill="#4a3a6a"
+              >
+                stores carry
+              </text>
+              <text
+                x="360"
+                y="258"
+                text-anchor="middle"
+                font-family="'JetBrains Mono',monospace"
+                font-size="9"
+                fill="#f472b6"
+              >
+                Cᵢ₊₁ → Cᵢₙ
+              </text>
+
+              <!-- Feedback carry line back to FA -->
+              <line
+                x1="360"
+                y1="268"
+                x2="360"
+                y2="310"
+                stroke="#f472b6"
+                stroke-width="1.5"
+                stroke-dasharray="4,2"
+              />
+              <line
+                x1="360"
+                y1="310"
+                x2="80"
+                y2="310"
+                stroke="#f472b6"
+                stroke-width="1.5"
+                stroke-dasharray="4,2"
+              />
+              <line
+                x1="80"
+                y1="310"
+                x2="80"
+                y2="230"
+                stroke="#f472b6"
+                stroke-width="1.5"
+                stroke-dasharray="4,2"
+              />
+              <line
+                x1="80"
+                y1="230"
+                x2="100"
+                y2="230"
+                stroke="#f472b6"
+                stroke-width="1.5"
+                stroke-dasharray="4,2"
+                marker-end="url(#ap)"
+              />
+              <text
+                x="64"
+                y="276"
+                font-family="'JetBrains Mono',monospace"
+                font-size="9"
+                fill="#f472b6"
+                transform="rotate(-90,64,276)"
+              >
+                feedback
+              </text>
+
+              <!-- CLK line to DFF -->
+              <line
+                x1="360"
+                y1="390"
+                x2="360"
+                y2="268"
+                stroke="#facc15"
+                stroke-width="1"
+                stroke-dasharray="3,3"
+                marker-end="url(#ay)"
+              />
+              <text
+                x="368"
+                y="380"
+                font-family="'JetBrains Mono',monospace"
+                font-size="10"
+                fill="#facc15"
+              >
+                CLK
+              </text>
+
+              <!-- Result shift register -->
+              <rect
+                x="20"
+                y="304"
+                width="200"
+                height="44"
+                rx="6"
+                fill="#0e0a14"
+                stroke="#4ade80"
+                stroke-width="1.5"
+              />
+              <text
+                x="120"
+                y="322"
+                text-anchor="middle"
+                font-family="'Orbitron',sans-serif"
+                font-size="9"
+                fill="#4ade80"
+                letter-spacing="2"
+              >
+                RESULT REGISTER
+              </text>
+              <g font-family="'JetBrains Mono',monospace" font-size="11">
+                <rect
+                  x="28"
+                  y="328"
+                  width="32"
+                  height="16"
+                  rx="3"
+                  fill="#0a140e"
+                  stroke="#4ade80"
+                  stroke-width="1"
+                />
+                <text x="44" y="340" text-anchor="middle" fill="#4ade80">
+                  S₃
+                </text>
+                <rect
+                  x="68"
+                  y="328"
+                  width="32"
+                  height="16"
+                  rx="3"
+                  fill="#0a140e"
+                  stroke="#4ade80"
+                  stroke-width="1"
+                />
+                <text x="84" y="340" text-anchor="middle" fill="#4ade80">
+                  S₂
+                </text>
+                <rect
+                  x="108"
+                  y="328"
+                  width="32"
+                  height="16"
+                  rx="3"
+                  fill="#0a140e"
+                  stroke="#4ade80"
+                  stroke-width="1"
+                />
+                <text x="124" y="340" text-anchor="middle" fill="#4ade80">
+                  S₁
+                </text>
+                <rect
+                  x="148"
+                  y="328"
+                  width="32"
+                  height="16"
+                  rx="3"
+                  fill="#0a140e"
+                  stroke="#4ade80"
+                  stroke-width="1"
+                />
+                <text x="164" y="340" text-anchor="middle" fill="#4ade80">
+                  S₀
+                </text>
+              </g>
+
+              <!-- timing annotation -->
+              <rect
+                x="20"
+                y="365"
+                width="420"
+                height="48"
+                rx="5"
+                fill="#0a0a10"
+                stroke="#2a1e40"
+                stroke-width="1"
+              />
+              <text
+                x="230"
+                y="381"
+                text-anchor="middle"
+                font-family="'JetBrains Mono',monospace"
+                font-size="9"
+                fill="#4a3a6a"
+              >
+                Timing for 4-bit addition:
+              </text>
+              <g font-family="'JetBrains Mono',monospace" font-size="9">
+                <text x="25" y="397" fill="#facc15">CLK1:</text>
+                <text x="75" y="397" fill="#fb923c">A₀+B₀+0</text>
+                <text x="155" y="397" fill="#facc15">CLK2:</text>
+                <text x="205" y="397" fill="#fb923c">A₁+B₁+C₁</text>
+                <text x="285" y="397" fill="#facc15">CLK3:</text>
+                <text x="335" y="397" fill="#fb923c">A₂+B₂+C₂</text>
+                <text x="25" y="408" fill="#facc15">CLK4:</text>
+                <text x="75" y="408" fill="#fb923c">
+                  A₃+B₃+C₃ → Done after 4 cycles
+                </text>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <!-- ═══ PARALLEL ADDER ═══ -->
+        <div class="diagram-box">
+          <div class="box-header parallel">⚡ PARALLEL ADDER (4-bit RCA)</div>
+          <div class="box-inner">
+            <svg viewBox="0 0 480 420" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker
+                  id="po"
+                  markerWidth="7"
+                  markerHeight="5"
+                  refX="6"
+                  refY="2.5"
+                  orient="auto"
+                >
+                  <polygon points="0 0,7 2.5,0 5" fill="#fb923c" />
+                </marker>
+                <marker
+                  id="pc"
+                  markerWidth="7"
+                  markerHeight="5"
+                  refX="6"
+                  refY="2.5"
+                  orient="auto"
+                >
+                  <polygon points="0 0,7 2.5,0 5" fill="#22d3ee" />
+                </marker>
+                <marker
+                  id="pg"
+                  markerWidth="7"
+                  markerHeight="5"
+                  refX="6"
+                  refY="2.5"
+                  orient="auto"
+                >
+                  <polygon points="0 0,7 2.5,0 5" fill="#4ade80" />
+                </marker>
+                <marker
+                  id="py"
+                  markerWidth="7"
+                  markerHeight="5"
+                  refX="6"
+                  refY="2.5"
+                  orient="auto"
+                >
+                  <polygon points="0 0,7 2.5,0 5" fill="#facc15" />
+                </marker>
+                <marker
+                  id="pp"
+                  markerWidth="7"
+                  markerHeight="5"
+                  refX="6"
+                  refY="2.5"
+                  orient="auto"
+                >
+                  <polygon points="0 0,7 2.5,0 5" fill="#f472b6" />
+                </marker>
+                <marker
+                  id="pr"
+                  markerWidth="7"
+                  markerHeight="5"
+                  refX="6"
+                  refY="2.5"
+                  orient="auto"
+                >
+                  <polygon points="0 0,7 2.5,0 5" fill="#f87171" />
+                </marker>
+              </defs>
+              <rect width="480" height="420" fill="#130e1c" />
+
+              <!-- Input labels -->
+              <g font-family="'JetBrains Mono',monospace" font-size="11">
+                <!-- FA 0 inputs -->
+                <text x="52" y="22" text-anchor="middle" fill="#fb923c">
+                  A₀
+                </text>
+                <text x="82" y="22" text-anchor="middle" fill="#22d3ee">
+                  B₀
+                </text>
+                <!-- FA 1 inputs -->
+                <text x="172" y="22" text-anchor="middle" fill="#fb923c">
+                  A₁
+                </text>
+                <text x="202" y="22" text-anchor="middle" fill="#22d3ee">
+                  B₁
+                </text>
+                <!-- FA 2 inputs -->
+                <text x="292" y="22" text-anchor="middle" fill="#fb923c">
+                  A₂
+                </text>
+                <text x="322" y="22" text-anchor="middle" fill="#22d3ee">
+                  B₂
+                </text>
+                <!-- FA 3 inputs -->
+                <text x="412" y="22" text-anchor="middle" fill="#fb923c">
+                  A₃
+                </text>
+                <text x="442" y="22" text-anchor="middle" fill="#22d3ee">
+                  B₃
+                </text>
+              </g>
+
+              <!-- Input vertical lines -->
+              <g stroke-width="1.5">
+                <line x1="52" y1="26" x2="52" y2="74" stroke="#fb923c" />
+                <line x1="82" y1="26" x2="82" y2="74" stroke="#22d3ee" />
+                <line x1="172" y1="26" x2="172" y2="74" stroke="#fb923c" />
+                <line x1="202" y1="26" x2="202" y2="74" stroke="#22d3ee" />
+                <line x1="292" y1="26" x2="292" y2="74" stroke="#fb923c" />
+                <line x1="322" y1="26" x2="322" y2="74" stroke="#22d3ee" />
+                <line x1="412" y1="26" x2="412" y2="74" stroke="#fb923c" />
+                <line x1="442" y1="26" x2="442" y2="74" stroke="#22d3ee" />
+              </g>
+
+              <!-- Cin = 0 for FA0 -->
+              <text
+                x="22"
+                y="120"
+                font-family="'JetBrains Mono',monospace"
+                font-size="10"
+                fill="#f87171"
+              >
+                C₀=0
+              </text>
+              <line
+                x1="28"
+                y1="114"
+                x2="28"
+                y2="114"
+                stroke="#f87171"
+                stroke-width="1.5"
+              />
+
+              <!-- FA Boxes (4 of them) -->
+              <!-- FA 0 -->
+              <rect
+                x="20"
+                y="74"
+                width="110"
+                height="70"
+                rx="7"
+                fill="#0e0a14"
+                stroke="#b06cff"
+                stroke-width="2"
+              />
+              <text
+                x="75"
+                y="93"
+                text-anchor="middle"
+                font-family="'Orbitron',sans-serif"
+                font-size="8"
+                fill="#b06cff"
+                letter-spacing="1"
+              >
+                FULL ADDER 0
+              </text>
+              <text
+                x="75"
+                y="112"
+                text-anchor="middle"
+                font-family="'JetBrains Mono',monospace"
+                font-size="10"
+                fill="#e2d9f3"
+              >
+                A₀+B₀+C₀
+              </text>
+              <text
+                x="75"
+                y="128"
+                text-anchor="middle"
+                font-family="'JetBrains Mono',monospace"
+                font-size="9"
+                fill="#4a3a6a"
+              >
+                → S₀, C₁
+              </text>
+              <!-- Cin line to FA0 -->
+              <line
+                x1="20"
+                y1="112"
+                x2="10"
+                y2="112"
+                stroke="#f87171"
+                stroke-width="1.5"
+              />
+              <line
+                x1="10"
+                y1="112"
+                x2="10"
+                y2="132"
+                stroke="#f87171"
+                stroke-width="1.5"
+              />
+              <text
+                x="3"
+                y="110"
+                font-family="'JetBrains Mono',monospace"
+                font-size="9"
+                fill="#f87171"
+              >
+                C₀
+              </text>
+
+              <!-- FA 1 -->
+              <rect
+                x="140"
+                y="74"
+                width="110"
+                height="70"
+                rx="7"
+                fill="#0e0a14"
+                stroke="#b06cff"
+                stroke-width="2"
+              />
+              <text
+                x="195"
+                y="93"
+                text-anchor="middle"
+                font-family="'Orbitron',sans-serif"
+                font-size="8"
+                fill="#b06cff"
+                letter-spacing="1"
+              >
+                FULL ADDER 1
+              </text>
+              <text
+                x="195"
+                y="112"
+                text-anchor="middle"
+                font-family="'JetBrains Mono',monospace"
+                font-size="10"
+                fill="#e2d9f3"
+              >
+                A₁+B₁+C₁
+              </text>
+              <text
+                x="195"
+                y="128"
+                text-anchor="middle"
+                font-family="'JetBrains Mono',monospace"
+                font-size="9"
+                fill="#4a3a6a"
+              >
+                → S₁, C₂
+              </text>
+
+              <!-- FA 2 -->
+              <rect
+                x="260"
+                y="74"
+                width="110"
+                height="70"
+                rx="7"
+                fill="#0e0a14"
+                stroke="#b06cff"
+                stroke-width="2"
+              />
+              <text
+                x="315"
+                y="93"
+                text-anchor="middle"
+                font-family="'Orbitron',sans-serif"
+                font-size="8"
+                fill="#b06cff"
+                letter-spacing="1"
+              >
+                FULL ADDER 2
+              </text>
+              <text
+                x="315"
+                y="112"
+                text-anchor="middle"
+                font-family="'JetBrains Mono',monospace"
+                font-size="10"
+                fill="#e2d9f3"
+              >
+                A₂+B₂+C₂
+              </text>
+              <text
+                x="315"
+                y="128"
+                text-anchor="middle"
+                font-family="'JetBrains Mono',monospace"
+                font-size="9"
+                fill="#4a3a6a"
+              >
+                → S₂, C₃
+              </text>
+
+              <!-- FA 3 -->
+              <rect
+                x="380"
+                y="74"
+                width="110"
+                height="70"
+                rx="7"
+                fill="#0e0a14"
+                stroke="#b06cff"
+                stroke-width="2"
+              />
+              <text
+                x="435"
+                y="93"
+                text-anchor="middle"
+                font-family="'Orbitron',sans-serif"
+                font-size="8"
+                fill="#b06cff"
+                letter-spacing="1"
+              >
+                FULL ADDER 3
+              </text>
+              <text
+                x="435"
+                y="112"
+                text-anchor="middle"
+                font-family="'JetBrains Mono',monospace"
+                font-size="10"
+                fill="#e2d9f3"
+              >
+                A₃+B₃+C₃
+              </text>
+              <text
+                x="435"
+                y="128"
+                text-anchor="middle"
+                font-family="'JetBrains Mono',monospace"
+                font-size="9"
+                fill="#4a3a6a"
+              >
+                → S₃, C₄
+              </text>
+
+              <!-- Carry ripple arrows FA0→FA1→FA2→FA3 -->
+              <line
+                x1="130"
+                y1="112"
+                x2="140"
+                y2="112"
+                stroke="#facc15"
+                stroke-width="2"
+                marker-end="url(#py)"
+              />
+              <text
+                x="135"
+                y="106"
+                font-family="'JetBrains Mono',monospace"
+                font-size="9"
+                fill="#facc15"
+              >
+                C₁
+              </text>
+              <line
+                x1="250"
+                y1="112"
+                x2="260"
+                y2="112"
+                stroke="#facc15"
+                stroke-width="2"
+                marker-end="url(#py)"
+              />
+              <text
+                x="255"
+                y="106"
+                font-family="'JetBrains Mono',monospace"
+                font-size="9"
+                fill="#facc15"
+              >
+                C₂
+              </text>
+              <line
+                x1="370"
+                y1="112"
+                x2="380"
+                y2="112"
+                stroke="#facc15"
+                stroke-width="2"
+                marker-end="url(#py)"
+              />
+              <text
+                x="375"
+                y="106"
+                font-family="'JetBrains Mono',monospace"
+                font-size="9"
+                fill="#facc15"
+              >
+                C₃
+              </text>
+
+              <!-- Ripple carry annotation -->
+              <path
+                d="M 130 160 Q 255 175 370 160"
+                stroke="#facc15"
+                stroke-width="1"
+                fill="none"
+                stroke-dasharray="3,2"
+              />
+              <text
+                x="250"
+                y="188"
+                text-anchor="middle"
+                font-family="'JetBrains Mono',monospace"
+                font-size="9"
+                fill="#facc15"
+              >
+                ◄── carry ripples from LSB to MSB ──►
+              </text>
+
+              <!-- Cout of FA3 -->
+              <line
+                x1="490"
+                y1="112"
+                x2="490"
+                y2="144"
+                stroke="#f87171"
+                stroke-width="2"
+              />
+              <!-- use text arrow instead -->
+              <text
+                x="453"
+                y="106"
+                font-family="'JetBrains Mono',monospace"
+                font-size="10"
+                fill="#f87171"
+              >
+                C₄→Cout
+              </text>
+
+              <!-- Sum output lines -->
+              <line
+                x1="75"
+                y1="144"
+                x2="75"
+                y2="210"
+                stroke="#4ade80"
+                stroke-width="2"
+                marker-end="url(#pg)"
+              />
+              <line
+                x1="195"
+                y1="144"
+                x2="195"
+                y2="210"
+                stroke="#4ade80"
+                stroke-width="2"
+                marker-end="url(#pg)"
+              />
+              <line
+                x1="315"
+                y1="144"
+                x2="315"
+                y2="210"
+                stroke="#4ade80"
+                stroke-width="2"
+                marker-end="url(#pg)"
+              />
+              <line
+                x1="435"
+                y1="144"
+                x2="435"
+                y2="210"
+                stroke="#4ade80"
+                stroke-width="2"
+                marker-end="url(#pg)"
+              />
+
+              <!-- Sum labels -->
+              <g
+                font-family="'JetBrains Mono',monospace"
+                font-size="11"
+                font-weight="bold"
+              >
+                <text x="75" y="225" text-anchor="middle" fill="#4ade80">
+                  S₀
+                </text>
+                <text x="195" y="225" text-anchor="middle" fill="#4ade80">
+                  S₁
+                </text>
+                <text x="315" y="225" text-anchor="middle" fill="#4ade80">
+                  S₂
+                </text>
+                <text x="435" y="225" text-anchor="middle" fill="#4ade80">
+                  S₃
+                </text>
+              </g>
+
+              <!-- "ALL SIMULTANEOUS" banner -->
+              <rect
+                x="20"
+                y="234"
+                width="440"
+                height="28"
+                rx="5"
+                fill="#0a0e0a"
+                stroke="#4ade80"
+                stroke-width="1"
+              />
+              <text
+                x="240"
+                y="253"
+                text-anchor="middle"
+                font-family="'Orbitron',sans-serif"
+                font-size="9"
+                fill="#4ade80"
+                letter-spacing="3"
+              >
+                ALL BITS ADDED IN 1 CLOCK CYCLE
+              </text>
+
+              <!-- Parallel vs CLA note -->
+              <rect
+                x="20"
+                y="275"
+                width="440"
+                height="130"
+                rx="6"
+                fill="#0e0a14"
+                stroke="#2a1e40"
+                stroke-width="1"
+              />
+              <text
+                x="240"
+                y="294"
+                text-anchor="middle"
+                font-family="'Orbitron',sans-serif"
+                font-size="9"
+                fill="#22d3ee"
+                letter-spacing="2"
+              >
+                TYPES OF PARALLEL ADDERS
+              </text>
+              <line
+                x1="30"
+                y1="300"
+                x2="450"
+                y2="300"
+                stroke="#2a1e40"
+                stroke-width="1"
+              />
+              <g font-family="'JetBrains Mono',monospace" font-size="9.5">
+                <text x="30" y="316" fill="#22d3ee">RCA</text>
+                <text x="75" y="316" fill="#4a3a6a">
+                  Ripple carry — simple, slow O(n)
+                </text>
+                <text x="30" y="333" fill="#b06cff">CLA</text>
+                <text x="75" y="333" fill="#4a3a6a">
+                  Look-ahead — fast O(log n)
+                </text>
+                <text x="30" y="350" fill="#facc15">CSA</text>
+                <text x="75" y="350" fill="#4a3a6a">
+                  Carry save — multi-operand
+                </text>
+                <text x="30" y="367" fill="#f472b6">CSel</text>
+                <text x="75" y="367" fill="#4a3a6a">
+                  Carry select — pre-compute both
+                </text>
+                <text x="30" y="390" fill="#4a3a6a">Speed:</text>
+                <text x="80" y="390" fill="#f87171">RCA</text>
+                <text x="120" y="390" fill="#4a3a6a">&lt;</text>
+                <text x="130" y="390" fill="#facc15">CSel</text>
+                <text x="175" y="390" fill="#4a3a6a">&lt;</text>
+                <text x="185" y="390" fill="#b06cff">CLA</text>
+                <text x="220" y="390" fill="#4a3a6a">&lt;</text>
+                <text x="230" y="390" fill="#22d3ee">CSA+CPA</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- COMPARISON TABLE -->
+      <div class="compare">
+        <div class="compare-header">
+          SERIAL vs PARALLEL — DETAILED COMPARISON
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th style="color: #fb923c">Serial Adder</th>
+              <th style="color: #22d3ee">Parallel Adder</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Operation Mode</td>
+              <td class="serial-val">Sequential (bit by bit)</td>
+              <td class="parallel-val">Combinational (all bits at once)</td>
+            </tr>
+            <tr>
+              <td>Speed (n-bit)</td>
+              <td class="serial-val">n clock cycles</td>
+              <td class="parallel-val">~1 clock cycle</td>
+            </tr>
+            <tr>
+              <td>Full Adders Required</td>
+              <td class="serial-val">1 FA only</td>
+              <td class="parallel-val">n FAs (one per bit)</td>
+            </tr>
+            <tr>
+              <td>Carry Handling</td>
+              <td class="serial-val">D Flip-Flop (stores carry)</td>
+              <td class="parallel-val">Wired between FA stages</td>
+            </tr>
+            <tr>
+              <td>Requires Clock?</td>
+              <td class="serial-val">Yes (sequential circuit)</td>
+              <td class="parallel-val">No (combinational circuit)</td>
+            </tr>
+            <tr>
+              <td>Register Needed?</td>
+              <td class="serial-val">Yes — shift registers for A, B, Result</td>
+              <td class="parallel-val">No registers needed</td>
+            </tr>
+            <tr>
+              <td>Hardware Cost</td>
+              <td class="serial-val">Very low</td>
+              <td class="parallel-val">Higher (more gates)</td>
+            </tr>
+            <tr>
+              <td>Scalability</td>
+              <td class="serial-val">Easy — same hardware for any n</td>
+              <td class="parallel-val">More hardware per added bit</td>
+            </tr>
+            <tr>
+              <td>Use Cases</td>
+              <td class="serial-val">Low-power IoT, FPGAs, serial comms</td>
+              <td class="parallel-val">CPUs, DSPs, high-speed arithmetic</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- TIMING DIAGRAM -->
+      <div class="timing">
+        <div class="timing-header">
+          ⏱ SERIAL ADDITION TIMING — A(1010) + B(0111)
+        </div>
+        <svg
+          viewBox="0 0 1000 130"
+          style="
+            width: 100%;
+            display: block;
+            background: #0e0a14;
+            padding: 10px;
+          "
+        >
+          <defs>
+            <marker
+              id="tg"
+              markerWidth="6"
+              markerHeight="5"
+              refX="5"
+              refY="2.5"
+              orient="auto"
+            >
+              <polygon points="0 0,6 2.5,0 5" fill="#4ade80" />
+            </marker>
+          </defs>
+          <!-- Clock pulses -->
+          <text
+            x="10"
+            y="22"
+            font-family="'JetBrains Mono',monospace"
+            font-size="10"
+            fill="#4a3a6a"
+          >
+            CLK
+          </text>
+          <g stroke="#facc15" stroke-width="1.5" fill="none">
+            <polyline
+              points="60,10 60,25 110,25 110,10 160,10 160,25 210,25 210,10 260,10 260,25 310,25 310,10 360,10 360,25 410,25 410,10"
+            />
+          </g>
+          <!-- Bit labels -->
+          <text
+            x="82"
+            y="22"
+            text-anchor="middle"
+            font-family="'JetBrains Mono',monospace"
+            font-size="9"
+            fill="#facc15"
+          >
+            CLK1
+          </text>
+          <text
+            x="182"
+            y="22"
+            text-anchor="middle"
+            font-family="'JetBrains Mono',monospace"
+            font-size="9"
+            fill="#facc15"
+          >
+            CLK2
+          </text>
+          <text
+            x="282"
+            y="22"
+            text-anchor="middle"
+            font-family="'JetBrains Mono',monospace"
+            font-size="9"
+            fill="#facc15"
+          >
+            CLK3
+          </text>
+          <text
+            x="382"
+            y="22"
+            text-anchor="middle"
+            font-family="'JetBrains Mono',monospace"
+            font-size="9"
+            fill="#facc15"
+          >
+            CLK4
+          </text>
+
+          <!-- A bits -->
+          <text
+            x="10"
+            y="48"
+            font-family="'JetBrains Mono',monospace"
+            font-size="10"
+            fill="#fb923c"
+          >
+            A
+          </text>
+          <g
+            font-family="'JetBrains Mono',monospace"
+            font-size="11"
+            text-anchor="middle"
+            fill="#fb923c"
+          >
+            <text x="82" y="50">0</text>
+            <text x="182" y="50">1</text>
+            <text x="282" y="50">0</text>
+            <text x="382" y="50">1</text>
+          </g>
+          <text
+            x="440"
+            y="50"
+            font-family="'JetBrains Mono',monospace"
+            font-size="9"
+            fill="#4a3a6a"
+          >
+            A₀→A₁→A₂→A₃
+          </text>
+
+          <!-- B bits -->
+          <text
+            x="10"
+            y="72"
+            font-family="'JetBrains Mono',monospace"
+            font-size="10"
+            fill="#22d3ee"
+          >
+            B
+          </text>
+          <g
+            font-family="'JetBrains Mono',monospace"
+            font-size="11"
+            text-anchor="middle"
+            fill="#22d3ee"
+          >
+            <text x="82" y="74">1</text>
+            <text x="182" y="74">1</text>
+            <text x="282" y="74">1</text>
+            <text x="382" y="74">0</text>
+          </g>
+          <text
+            x="440"
+            y="74"
+            font-family="'JetBrains Mono',monospace"
+            font-size="9"
+            fill="#4a3a6a"
+          >
+            B₀→B₁→B₂→B₃
+          </text>
+
+          <!-- Carry -->
+          <text
+            x="10"
+            y="96"
+            font-family="'JetBrains Mono',monospace"
+            font-size="10"
+            fill="#f472b6"
+          >
+            C
+          </text>
+          <g
+            font-family="'JetBrains Mono',monospace"
+            font-size="11"
+            text-anchor="middle"
+            fill="#f472b6"
+          >
+            <text x="82" y="98">0</text>
+            <text x="182" y="98">1</text>
+            <text x="282" y="98">1</text>
+            <text x="382" y="98">1</text>
+          </g>
+          <text
+            x="440"
+            y="98"
+            font-family="'JetBrains Mono',monospace"
+            font-size="9"
+            fill="#4a3a6a"
+          >
+            carry from prev step
+          </text>
+
+          <!-- Sum -->
+          <text
+            x="10"
+            y="120"
+            font-family="'JetBrains Mono',monospace"
+            font-size="10"
+            fill="#4ade80"
+          >
+            S
+          </text>
+          <g
+            font-family="'JetBrains Mono',monospace"
+            font-size="11"
+            text-anchor="middle"
+            fill="#4ade80"
+          >
+            <text x="82" y="122">1</text>
+            <text x="182" y="122">0</text>
+            <text x="282" y="122">0</text>
+            <text x="382" y="122">0</text>
+          </g>
+          <text
+            x="440"
+            y="122"
+            font-family="'JetBrains Mono',monospace"
+            font-size="9"
+            fill="#4a3a6a"
+          >
+            S₀=1,S₁=0,S₂=0,S₃=0 + Cout=1 → 10001 = 17 ✓
+          </text>
+
+          <!-- Vertical dividers -->
+          <g stroke="#2a1e40" stroke-width="1" stroke-dasharray="3,3">
+            <line x1="135" y1="5" x2="135" y2="125" />
+            <line x1="235" y1="5" x2="235" y2="125" />
+            <line x1="335" y1="5" x2="335" y2="125" />
+          </g>
+        </svg>
+      </div>
+    </div>
+  </body>
+</html>
