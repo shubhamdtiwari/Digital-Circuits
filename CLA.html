@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>4-bit Carry Look-Ahead Adder</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap");
+
+      :root {
+        --bg: #0a0e1a;
+        --panel: #0f1628;
+        --border: #1e2d50;
+        --blue: #00d4ff;
+        --green: #00ff9d;
+        --orange: #ff7b00;
+        --red: #ff3366;
+        --yellow: #ffd600;
+        --purple: #a855f7;
+        --text: #c8d8f0;
+        --dim: #4a5a7a;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: var(--bg);
+        font-family: "Share Tech Mono", monospace;
+        color: var(--text);
+        min-height: 100vh;
+        padding: 20px;
+        overflow-x: hidden;
+      }
+
+      /* Grid background */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: linear-gradient(
+            rgba(0, 212, 255, 0.03) 1px,
+            transparent 1px
+          ),
+          linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+        background-size: 40px 40px;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .container {
+        position: relative;
+        z-index: 1;
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        font-family: "Orbitron", sans-serif;
+        font-size: 1.6rem;
+        font-weight: 900;
+        color: var(--blue);
+        text-align: center;
+        letter-spacing: 4px;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        text-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+      }
+
+      .subtitle {
+        text-align: center;
+        color: var(--dim);
+        font-size: 0.75rem;
+        letter-spacing: 3px;
+        margin-bottom: 30px;
+      }
+
+      /* ── MAIN SVG DIAGRAM ── */
+      .svg-wrap {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 24px;
+        box-shadow: 0 0 40px rgba(0, 212, 255, 0.05),
+          inset 0 1px 0 rgba(255, 255, 255, 0.03);
+      }
+
+      svg {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      /* ── EQUATIONS PANEL ── */
+      .equations {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      .eq-card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 16px 20px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .eq-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 3px;
+        height: 100%;
+      }
+
+      .eq-card.gen::before {
+        background: var(--green);
+      }
+      .eq-card.prop::before {
+        background: var(--orange);
+      }
+      .eq-card.carry::before {
+        background: var(--blue);
+      }
+      .eq-card.sum::before {
+        background: var(--purple);
+      }
+
+      .eq-label {
+        font-family: "Orbitron", sans-serif;
+        font-size: 0.65rem;
+        letter-spacing: 2px;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+      }
+
+      .eq-card.gen .eq-label {
+        color: var(--green);
+      }
+      .eq-card.prop .eq-label {
+        color: var(--orange);
+      }
+      .eq-card.carry .eq-label {
+        color: var(--blue);
+      }
+      .eq-card.sum .eq-label {
+        color: var(--purple);
+      }
+
+      .eq-formula {
+        font-size: 0.82rem;
+        line-height: 1.9;
+        color: var(--text);
+      }
+
+      .eq-formula span.g {
+        color: var(--green);
+        font-weight: bold;
+      }
+      .eq-formula span.p {
+        color: var(--orange);
+        font-weight: bold;
+      }
+      .eq-formula span.c {
+        color: var(--blue);
+        font-weight: bold;
+      }
+      .eq-formula span.s {
+        color: var(--purple);
+        font-weight: bold;
+      }
+
+      /* ── LEGEND ── */
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px 20px;
+        justify-content: center;
+      }
+
+      .leg-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.75rem;
+      }
+
+      .leg-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 2px;
+      }
+
+      @media (max-width: 600px) {
+        .equations {
+          grid-template-columns: 1fr;
+        }
+        h1 {
+          font-size: 1.1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Carry Look-Ahead Adder</h1>
+      <p class="subtitle">4-BIT · PARALLEL CARRY COMPUTATION · DIGITAL LOGIC</p>
+
+      <!-- MAIN DIAGRAM -->
+      <div class="svg-wrap">
+        <svg viewBox="0 0 1040 620" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <!-- Arrow markers -->
+            <marker
+              id="arr"
+              markerWidth="8"
+              markerHeight="6"
+              refX="7"
+              refY="3"
+              orient="auto"
+            >
+              <polygon points="0 0, 8 3, 0 6" fill="#4a5a7a" />
+            </marker>
+            <marker
+              id="arr-blue"
+              markerWidth="8"
+              markerHeight="6"
+              refX="7"
+              refY="3"
+              orient="auto"
+            >
+              <polygon points="0 0, 8 3, 0 6" fill="#00d4ff" />
+            </marker>
+            <marker
+              id="arr-green"
+              markerWidth="8"
+              markerHeight="6"
+              refX="7"
+              refY="3"
+              orient="auto"
+            >
+              <polygon points="0 0, 8 3, 0 6" fill="#00ff9d" />
+            </marker>
+            <marker
+              id="arr-orange"
+              markerWidth="8"
+              markerHeight="6"
+              refX="7"
+              refY="3"
+              orient="auto"
+            >
+              <polygon points="0 0, 8 3, 0 6" fill="#ff7b00" />
+            </marker>
+            <marker
+              id="arr-purple"
+              markerWidth="8"
+              markerHeight="6"
+              refX="7"
+              refY="3"
+              orient="auto"
+            >
+              <polygon points="0 0, 8 3, 0 6" fill="#a855f7" />
+            </marker>
+            <marker
+              id="arr-red"
+              markerWidth="8"
+              markerHeight="6"
+              refX="7"
+              refY="3"
+              orient="auto"
+            >
+              <polygon points="0 0, 8 3, 0 6" fill="#ff3366" />
+            </marker>
+
+            <!-- Glow filters -->
+            <filter id="glow-blue">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+            <filter id="glow-green">
+              <feGaussianBlur stdDeviation="2.5" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+
+          <!-- Background -->
+          <rect width="1040" height="620" fill="#0a0e1a" rx="8" />
+
+          <!-- ═══════════════════════════════════════════
+         INPUT LABELS  A₀B₀ … A₃B₃  +  C₀
+    ═══════════════════════════════════════════ -->
+          <!-- Bit positions: 120, 320, 520, 720 (x centers for 4 bit slices) -->
+
+          <!-- A, B input pairs -->
+          <g
+            font-family="'Share Tech Mono',monospace"
+            font-size="13"
+            fill="#c8d8f0"
+          >
+            <!-- Bit 0 -->
+            <text x="100" y="32" text-anchor="middle" fill="#ffd600">A₀</text>
+            <text x="140" y="32" text-anchor="middle" fill="#ff7b00">B₀</text>
+            <!-- Bit 1 -->
+            <text x="300" y="32" text-anchor="middle" fill="#ffd600">A₁</text>
+            <text x="340" y="32" text-anchor="middle" fill="#ff7b00">B₁</text>
+            <!-- Bit 2 -->
+            <text x="500" y="32" text-anchor="middle" fill="#ffd600">A₂</text>
+            <text x="540" y="32" text-anchor="middle" fill="#ff7b00">B₂</text>
+            <!-- Bit 3 -->
+            <text x="700" y="32" text-anchor="middle" fill="#ffd600">A₃</text>
+            <text x="740" y="32" text-anchor="middle" fill="#ff7b00">B₃</text>
+            <!-- C0 -->
+            <text x="950" y="32" text-anchor="middle" fill="#ff3366">C₀</text>
+          </g>
+
+          <!-- Vertical input lines down to PG boxes -->
+          <g stroke="#4a5a7a" stroke-width="1.5" stroke-dasharray="4,3">
+            <line x1="100" y1="36" x2="100" y2="90" />
+            <line x1="140" y1="36" x2="140" y2="90" />
+            <line x1="300" y1="36" x2="300" y2="90" />
+            <line x1="340" y1="36" x2="340" y2="90" />
+            <line x1="500" y1="36" x2="500" y2="90" />
+            <line x1="540" y1="36" x2="540" y2="90" />
+            <line x1="700" y1="36" x2="700" y2="90" />
+            <line x1="740" y1="36" x2="740" y2="90" />
+          </g>
+
+          <!-- C0 line goes down to CLA block -->
+          <line
+            x1="950"
+            y1="36"
+            x2="950"
+            y2="260"
+            stroke="#ff3366"
+            stroke-width="2"
+            stroke-dasharray="5,3"
+            marker-end="url(#arr-red)"
+          />
+          <text
+            x="960"
+            y="155"
+            font-family="'Share Tech Mono',monospace"
+            font-size="11"
+            fill="#ff3366"
+          >
+            C₀ in
+          </text>
+
+          <!-- ═══════════════════════════════════════════
+         PG GENERATOR BOXES  (row 1)
+    ═══════════════════════════════════════════ -->
+          <!-- Box style: dark fill, colored border -->
+
+          <!-- PG Box 0 -->
+          <rect
+            x="70"
+            y="90"
+            width="100"
+            height="60"
+            rx="6"
+            fill="#0f1628"
+            stroke="#ffd600"
+            stroke-width="1.5"
+          />
+          <text
+            x="120"
+            y="114"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="11"
+            fill="#00ff9d"
+          >
+            G₀ = A₀·B₀
+          </text>
+          <text
+            x="120"
+            y="132"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="11"
+            fill="#ff7b00"
+          >
+            P₀ = A₀⊕B₀
+          </text>
+          <text
+            x="120"
+            y="86"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="10"
+            fill="#ffd600"
+            letter-spacing="1"
+          >
+            PG UNIT 0
+          </text>
+
+          <!-- PG Box 1 -->
+          <rect
+            x="270"
+            y="90"
+            width="100"
+            height="60"
+            rx="6"
+            fill="#0f1628"
+            stroke="#ffd600"
+            stroke-width="1.5"
+          />
+          <text
+            x="320"
+            y="114"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="11"
+            fill="#00ff9d"
+          >
+            G₁ = A₁·B₁
+          </text>
+          <text
+            x="320"
+            y="132"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="11"
+            fill="#ff7b00"
+          >
+            P₁ = A₁⊕B₁
+          </text>
+          <text
+            x="320"
+            y="86"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="10"
+            fill="#ffd600"
+            letter-spacing="1"
+          >
+            PG UNIT 1
+          </text>
+
+          <!-- PG Box 2 -->
+          <rect
+            x="470"
+            y="90"
+            width="100"
+            height="60"
+            rx="6"
+            fill="#0f1628"
+            stroke="#ffd600"
+            stroke-width="1.5"
+          />
+          <text
+            x="520"
+            y="114"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="11"
+            fill="#00ff9d"
+          >
+            G₂ = A₂·B₂
+          </text>
+          <text
+            x="520"
+            y="132"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="11"
+            fill="#ff7b00"
+          >
+            P₂ = A₂⊕B₂
+          </text>
+          <text
+            x="520"
+            y="86"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="10"
+            fill="#ffd600"
+            letter-spacing="1"
+          >
+            PG UNIT 2
+          </text>
+
+          <!-- PG Box 3 -->
+          <rect
+            x="670"
+            y="90"
+            width="100"
+            height="60"
+            rx="6"
+            fill="#0f1628"
+            stroke="#ffd600"
+            stroke-width="1.5"
+          />
+          <text
+            x="720"
+            y="114"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="11"
+            fill="#00ff9d"
+          >
+            G₃ = A₃·B₃
+          </text>
+          <text
+            x="720"
+            y="132"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="11"
+            fill="#ff7b00"
+          >
+            P₃ = A₃⊕B₃
+          </text>
+          <text
+            x="720"
+            y="86"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="10"
+            fill="#ffd600"
+            letter-spacing="1"
+          >
+            PG UNIT 3
+          </text>
+
+          <!-- ═══════════════════════════════════════════
+         LINES FROM PG UNITS DOWN TO CLA BLOCK
+    ═══════════════════════════════════════════ -->
+          <!-- G lines (green) -->
+          <line
+            x1="90"
+            y1="150"
+            x2="90"
+            y2="262"
+            stroke="#00ff9d"
+            stroke-width="1.5"
+            marker-end="url(#arr-green)"
+          />
+          <line
+            x1="290"
+            y1="150"
+            x2="290"
+            y2="262"
+            stroke="#00ff9d"
+            stroke-width="1.5"
+            marker-end="url(#arr-green)"
+          />
+          <line
+            x1="490"
+            y1="150"
+            x2="490"
+            y2="262"
+            stroke="#00ff9d"
+            stroke-width="1.5"
+            marker-end="url(#arr-green)"
+          />
+          <line
+            x1="690"
+            y1="150"
+            x2="690"
+            y2="262"
+            stroke="#00ff9d"
+            stroke-width="1.5"
+            marker-end="url(#arr-green)"
+          />
+
+          <!-- P lines (orange) -->
+          <line
+            x1="150"
+            y1="150"
+            x2="150"
+            y2="262"
+            stroke="#ff7b00"
+            stroke-width="1.5"
+            marker-end="url(#arr-orange)"
+          />
+          <line
+            x1="350"
+            y1="150"
+            x2="350"
+            y2="262"
+            stroke="#ff7b00"
+            stroke-width="1.5"
+            marker-end="url(#arr-orange)"
+          />
+          <line
+            x1="550"
+            y1="150"
+            x2="550"
+            y2="262"
+            stroke="#ff7b00"
+            stroke-width="1.5"
+            marker-end="url(#arr-orange)"
+          />
+          <line
+            x1="750"
+            y1="150"
+            x2="750"
+            y2="262"
+            stroke="#ff7b00"
+            stroke-width="1.5"
+            marker-end="url(#arr-orange)"
+          />
+
+          <!-- Small G/P labels on lines -->
+          <g font-family="'Share Tech Mono',monospace" font-size="10">
+            <text x="82" y="210" fill="#00ff9d">G₀</text>
+            <text x="142" y="210" fill="#ff7b00">P₀</text>
+            <text x="282" y="210" fill="#00ff9d">G₁</text>
+            <text x="342" y="210" fill="#ff7b00">P₁</text>
+            <text x="482" y="210" fill="#00ff9d">G₂</text>
+            <text x="542" y="210" fill="#ff7b00">P₂</text>
+            <text x="682" y="210" fill="#00ff9d">G₃</text>
+            <text x="742" y="210" fill="#ff7b00">P₃</text>
+          </g>
+
+          <!-- Also pass P down to SUM block at bottom (dashed orange) -->
+          <line
+            x1="150"
+            y1="370"
+            x2="150"
+            y2="480"
+            stroke="#ff7b00"
+            stroke-width="1"
+            stroke-dasharray="3,3"
+          />
+          <line
+            x1="350"
+            y1="370"
+            x2="350"
+            y2="480"
+            stroke="#ff7b00"
+            stroke-width="1"
+            stroke-dasharray="3,3"
+          />
+          <line
+            x1="550"
+            y1="370"
+            x2="550"
+            y2="480"
+            stroke="#ff7b00"
+            stroke-width="1"
+            stroke-dasharray="3,3"
+          />
+          <line
+            x1="750"
+            y1="370"
+            x2="750"
+            y2="480"
+            stroke="#ff7b00"
+            stroke-width="1"
+            stroke-dasharray="3,3"
+          />
+
+          <!-- ═══════════════════════════════════════════
+         CLA BLOCK (central, big)
+    ═══════════════════════════════════════════ -->
+          <rect
+            x="50"
+            y="262"
+            width="930"
+            height="108"
+            rx="8"
+            fill="#0d1830"
+            stroke="#00d4ff"
+            stroke-width="2"
+          />
+          <!-- Glow effect top border -->
+          <rect
+            x="50"
+            y="262"
+            width="930"
+            height="4"
+            rx="2"
+            fill="#00d4ff"
+            opacity="0.6"
+          />
+
+          <text
+            x="515"
+            y="282"
+            text-anchor="middle"
+            font-family="'Orbitron',sans-serif"
+            font-size="11"
+            fill="#00d4ff"
+            letter-spacing="3"
+            font-weight="700"
+          >
+            CARRY LOOK-AHEAD GENERATOR
+          </text>
+
+          <!-- Internal equations inside CLA block -->
+          <g
+            font-family="'Share Tech Mono',monospace"
+            font-size="10.5"
+            fill="#c8d8f0"
+          >
+            <text x="120" y="308" text-anchor="middle">
+              <tspan fill="#00d4ff">C₁</tspan>
+              =
+              <tspan fill="#00ff9d">G₀</tspan>
+              +
+              <tspan fill="#ff7b00">P₀</tspan>
+              ·
+              <tspan fill="#ff3366">C₀</tspan>
+            </text>
+            <text x="320" y="308" text-anchor="middle">
+              <tspan fill="#00d4ff">C₂</tspan>
+              =
+              <tspan fill="#00ff9d">G₁</tspan>
+              +
+              <tspan fill="#ff7b00">P₁</tspan>
+              ·
+              <tspan fill="#00ff9d">G₀</tspan>
+              +
+              <tspan fill="#ff7b00">P₁P₀</tspan>
+              ·
+              <tspan fill="#ff3366">C₀</tspan>
+            </text>
+            <text x="540" y="308" text-anchor="middle">
+              <tspan fill="#00d4ff">C₃</tspan>
+              =
+              <tspan fill="#00ff9d">G₂</tspan>
+              +
+              <tspan fill="#ff7b00">P₂</tspan>
+              ·
+              <tspan fill="#00ff9d">G₁</tspan>
+              +
+              <tspan fill="#ff7b00">P₂P₁</tspan>
+              ·
+              <tspan fill="#00ff9d">G₀</tspan>
+              +
+              <tspan fill="#ff7b00">P₂P₁P₀</tspan>
+              ·
+              <tspan fill="#ff3366">C₀</tspan>
+            </text>
+            <text x="800" y="308" text-anchor="middle" font-size="10">
+              <tspan fill="#00d4ff">C₄</tspan>
+              =
+              <tspan fill="#00ff9d">G₃</tspan>
+              +
+              <tspan fill="#ff7b00">P₃</tspan>
+              ·
+              <tspan fill="#00ff9d">G₂</tspan>
+              +
+              <tspan fill="#ff7b00">P₃P₂</tspan>
+              ·
+              <tspan fill="#00ff9d">G₁</tspan>
+              +
+              <tspan fill="#ff7b00">P₃P₂P₁</tspan>
+              ·
+              <tspan fill="#00ff9d">G₀</tspan>
+              +
+              <tspan fill="#ff7b00">P₃P₂P₁P₀</tspan>
+              ·
+              <tspan fill="#ff3366">C₀</tspan>
+            </text>
+          </g>
+
+          <!-- Separator lines inside CLA block -->
+          <line
+            x1="218"
+            y1="272"
+            x2="218"
+            y2="368"
+            stroke="#1e2d50"
+            stroke-width="1"
+          />
+          <line
+            x1="428"
+            y1="272"
+            x2="428"
+            y2="368"
+            stroke="#1e2d50"
+            stroke-width="1"
+          />
+          <line
+            x1="656"
+            y1="272"
+            x2="656"
+            y2="368"
+            stroke="#1e2d50"
+            stroke-width="1"
+          />
+
+          <!-- "ALL COMPUTED IN PARALLEL" note -->
+          <text
+            x="515"
+            y="350"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="9"
+            fill="#00d4ff"
+            opacity="0.6"
+            letter-spacing="3"
+          >
+            ◄ ALL CARRIES COMPUTED SIMULTANEOUSLY — NO RIPPLE ►
+          </text>
+
+          <!-- ═══════════════════════════════════════════
+         CARRY OUTPUT LINES FROM CLA → SUM BLOCKS
+    ═══════════════════════════════════════════ -->
+          <!-- C1 out -->
+          <line
+            x1="120"
+            y1="370"
+            x2="120"
+            y2="480"
+            stroke="#00d4ff"
+            stroke-width="2"
+            marker-end="url(#arr-blue)"
+          />
+          <!-- C2 out -->
+          <line
+            x1="320"
+            y1="370"
+            x2="320"
+            y2="480"
+            stroke="#00d4ff"
+            stroke-width="2"
+            marker-end="url(#arr-blue)"
+          />
+          <!-- C3 out -->
+          <line
+            x1="520"
+            y1="370"
+            x2="520"
+            y2="480"
+            stroke="#00d4ff"
+            stroke-width="2"
+            marker-end="url(#arr-blue)"
+          />
+          <!-- C4 out (carry out of adder) -->
+          <line
+            x1="900"
+            y1="370"
+            x2="900"
+            y2="500"
+            stroke="#ff3366"
+            stroke-width="2.5"
+            marker-end="url(#arr-red)"
+          />
+
+          <!-- Carry labels -->
+          <g font-family="'Share Tech Mono',monospace" font-size="11">
+            <text x="126" y="430" fill="#00d4ff">C₁</text>
+            <text x="326" y="430" fill="#00d4ff">C₂</text>
+            <text x="526" y="430" fill="#00d4ff">C₃</text>
+            <text x="908" y="445" fill="#ff3366">C₄</text>
+            <text x="880" y="460" fill="#ff3366" font-size="9">(Cout)</text>
+          </g>
+
+          <!-- ═══════════════════════════════════════════
+         SUM BLOCKS  S = P XOR C
+    ═══════════════════════════════════════════ -->
+          <!-- Sum box 0 -->
+          <rect
+            x="80"
+            y="480"
+            width="90"
+            height="50"
+            rx="6"
+            fill="#0f1628"
+            stroke="#a855f7"
+            stroke-width="1.5"
+          />
+          <text
+            x="125"
+            y="500"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="10"
+            fill="#a855f7"
+          >
+            SUM XOR
+          </text>
+          <text
+            x="125"
+            y="518"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="10"
+            fill="#c8d8f0"
+          >
+            S₀=P₀⊕C₀
+          </text>
+
+          <!-- Sum box 1 -->
+          <rect
+            x="280"
+            y="480"
+            width="90"
+            height="50"
+            rx="6"
+            fill="#0f1628"
+            stroke="#a855f7"
+            stroke-width="1.5"
+          />
+          <text
+            x="325"
+            y="500"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="10"
+            fill="#a855f7"
+          >
+            SUM XOR
+          </text>
+          <text
+            x="325"
+            y="518"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="10"
+            fill="#c8d8f0"
+          >
+            S₁=P₁⊕C₁
+          </text>
+
+          <!-- Sum box 2 -->
+          <rect
+            x="480"
+            y="480"
+            width="90"
+            height="50"
+            rx="6"
+            fill="#0f1628"
+            stroke="#a855f7"
+            stroke-width="1.5"
+          />
+          <text
+            x="525"
+            y="500"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="10"
+            fill="#a855f7"
+          >
+            SUM XOR
+          </text>
+          <text
+            x="525"
+            y="518"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="10"
+            fill="#c8d8f0"
+          >
+            S₂=P₂⊕C₂
+          </text>
+
+          <!-- Sum box 3 -->
+          <rect
+            x="680"
+            y="480"
+            width="90"
+            height="50"
+            rx="6"
+            fill="#0f1628"
+            stroke="#a855f7"
+            stroke-width="1.5"
+          />
+          <text
+            x="725"
+            y="500"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="10"
+            fill="#a855f7"
+          >
+            SUM XOR
+          </text>
+          <text
+            x="725"
+            y="518"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="10"
+            fill="#c8d8f0"
+          >
+            S₃=P₃⊕C₃
+          </text>
+
+          <!-- ═══════════════════════════════════════════
+         FINAL SUM OUTPUTS
+    ═══════════════════════════════════════════ -->
+          <line
+            x1="125"
+            y1="530"
+            x2="125"
+            y2="580"
+            stroke="#a855f7"
+            stroke-width="2"
+            marker-end="url(#arr-purple)"
+          />
+          <line
+            x1="325"
+            y1="530"
+            x2="325"
+            y2="580"
+            stroke="#a855f7"
+            stroke-width="2"
+            marker-end="url(#arr-purple)"
+          />
+          <line
+            x1="525"
+            y1="530"
+            x2="525"
+            y2="580"
+            stroke="#a855f7"
+            stroke-width="2"
+            marker-end="url(#arr-purple)"
+          />
+          <line
+            x1="725"
+            y1="530"
+            x2="725"
+            y2="580"
+            stroke="#a855f7"
+            stroke-width="2"
+            marker-end="url(#arr-purple)"
+          />
+
+          <g
+            font-family="'Share Tech Mono',monospace"
+            font-size="14"
+            font-weight="bold"
+          >
+            <text x="125" y="600" text-anchor="middle" fill="#a855f7">S₀</text>
+            <text x="325" y="600" text-anchor="middle" fill="#a855f7">S₁</text>
+            <text x="525" y="600" text-anchor="middle" fill="#a855f7">S₂</text>
+            <text x="725" y="600" text-anchor="middle" fill="#a855f7">S₃</text>
+            <text x="900" y="520" text-anchor="middle" fill="#ff3366">
+              C_out
+            </text>
+          </g>
+
+          <!-- ═══════════════════════════════════════════
+         GATE DELAY ANNOTATION
+    ═══════════════════════════════════════════ -->
+          <!-- Stage 1: PG computation -->
+          <rect
+            x="810"
+            y="90"
+            width="200"
+            height="60"
+            rx="5"
+            fill="#0a0e1a"
+            stroke="#1e2d50"
+            stroke-width="1"
+          />
+          <text
+            x="910"
+            y="110"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="10"
+            fill="#4a5a7a"
+          >
+            STAGE 1: 1 gate delay
+          </text>
+          <text
+            x="910"
+            y="128"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="9"
+            fill="#ffd600"
+          >
+            Compute G, P (AND + XOR)
+          </text>
+          <text
+            x="910"
+            y="145"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="9"
+            fill="#4a5a7a"
+          >
+            all 4 bits in parallel
+          </text>
+
+          <!-- Stage 2: CLA computation -->
+          <rect
+            x="810"
+            y="265"
+            width="200"
+            height="50"
+            rx="5"
+            fill="#0a0e1a"
+            stroke="#1e2d50"
+            stroke-width="1"
+          />
+          <text
+            x="910"
+            y="286"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="10"
+            fill="#4a5a7a"
+          >
+            STAGE 2: 2 gate delays
+          </text>
+          <text
+            x="910"
+            y="305"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="9"
+            fill="#00d4ff"
+          >
+            All carries C₁–C₄ at once
+          </text>
+
+          <!-- Stage 3: Sum computation -->
+          <rect
+            x="810"
+            y="482"
+            width="200"
+            height="50"
+            rx="5"
+            fill="#0a0e1a"
+            stroke="#1e2d50"
+            stroke-width="1"
+          />
+          <text
+            x="910"
+            y="502"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="10"
+            fill="#4a5a7a"
+          >
+            STAGE 3: 1 gate delay
+          </text>
+          <text
+            x="910"
+            y="520"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="9"
+            fill="#a855f7"
+          >
+            S = P XOR C (XOR gate)
+          </text>
+
+          <!-- Total -->
+          <rect
+            x="810"
+            y="545"
+            width="200"
+            height="35"
+            rx="5"
+            fill="#0d1830"
+            stroke="#00d4ff"
+            stroke-width="1.5"
+          />
+          <text
+            x="910"
+            y="558"
+            text-anchor="middle"
+            font-family="'Share Tech Mono',monospace"
+            font-size="9"
+            fill="#4a5a7a"
+          >
+            TOTAL PROPAGATION DELAY:
+          </text>
+          <text
+            x="910"
+            y="573"
+            text-anchor="middle"
+            font-family="'Orbitron',sans-serif"
+            font-size="11"
+            fill="#00d4ff"
+            font-weight="700"
+          >
+            ONLY 4 GATE DELAYS
+          </text>
+
+          <!-- Arrow from stage boxes to diagram (decorative) -->
+          <line
+            x1="810"
+            y1="120"
+            x2="780"
+            y2="120"
+            stroke="#1e2d50"
+            stroke-width="1"
+            stroke-dasharray="3,3"
+          />
+          <line
+            x1="810"
+            y1="290"
+            x2="780"
+            y2="290"
+            stroke="#1e2d50"
+            stroke-width="1"
+            stroke-dasharray="3,3"
+          />
+          <line
+            x1="810"
+            y1="507"
+            x2="780"
+            y2="507"
+            stroke="#1e2d50"
+            stroke-width="1"
+            stroke-dasharray="3,3"
+          />
+        </svg>
+      </div>
+
+      <!-- EQUATIONS BREAKDOWN -->
+      <div class="equations">
+        <div class="eq-card gen">
+          <div class="eq-label">Generate Function</div>
+          <div class="eq-formula">
+            <span class="g">Gᵢ = Aᵢ · Bᵢ</span><br />
+            Bit i generates a carry regardless of Cᵢ
+          </div>
+        </div>
+        <div class="eq-card prop">
+          <div class="eq-label">Propagate Function</div>
+          <div class="eq-formula">
+            <span class="p">Pᵢ = Aᵢ ⊕ Bᵢ</span><br />
+            Bit i propagates an incoming carry forward
+          </div>
+        </div>
+        <div class="eq-card carry">
+          <div class="eq-label">Look-Ahead Carry Equations</div>
+          <div class="eq-formula">
+            <span class="c">C₁</span> = <span class="g">G₀</span> +
+            <span class="p">P₀</span>·<span style="color: #ff3366">C₀</span
+            ><br />
+            <span class="c">C₂</span> = <span class="g">G₁</span> +
+            <span class="p">P₁</span>·<span class="g">G₀</span> +
+            <span class="p">P₁P₀</span>·<span style="color: #ff3366">C₀</span
+            ><br />
+            <span class="c">C₃</span> = <span class="g">G₂</span> +
+            <span class="p">P₂</span>·<span class="g">G₁</span> +
+            <span class="p">P₂P₁</span>·<span class="g">G₀</span> +
+            <span class="p">P₂P₁P₀</span>·<span style="color: #ff3366">C₀</span
+            ><br />
+            <span class="c">C₄</span> = <span class="g">G₃</span> +
+            <span class="p">P₃</span>·<span class="g">G₂</span> +
+            <span class="p">P₃P₂</span>·<span class="g">G₁</span> +
+            <span class="p">P₃P₂P₁</span>·<span class="g">G₀</span> +
+            <span class="p">P₃..P₀</span>·<span style="color: #ff3366">C₀</span>
+          </div>
+        </div>
+        <div class="eq-card sum">
+          <div class="eq-label">Sum Computation</div>
+          <div class="eq-formula">
+            <span class="s">Sᵢ = Pᵢ ⊕ Cᵢ</span><br />
+            Since Pᵢ = Aᵢ⊕Bᵢ, this gives<br />
+            <span class="s">Sᵢ = Aᵢ ⊕ Bᵢ ⊕ Cᵢ</span> ← Full Adder sum
+          </div>
+        </div>
+      </div>
+
+      <!-- LEGEND -->
+      <div class="legend">
+        <div class="leg-item">
+          <div class="leg-dot" style="background: #ffd600"></div>
+          A inputs
+        </div>
+        <div class="leg-item">
+          <div class="leg-dot" style="background: #ff7b00"></div>
+          B inputs
+        </div>
+        <div class="leg-item">
+          <div class="leg-dot" style="background: #00ff9d"></div>
+          Generate (G)
+        </div>
+        <div class="leg-item">
+          <div class="leg-dot" style="background: #ff7b00"></div>
+          Propagate (P)
+        </div>
+        <div class="leg-item">
+          <div class="leg-dot" style="background: #00d4ff"></div>
+          Carry signals (C₁–C₃)
+        </div>
+        <div class="leg-item">
+          <div class="leg-dot" style="background: #ff3366"></div>
+          C₀ in / C₄ out
+        </div>
+        <div class="leg-item">
+          <div class="leg-dot" style="background: #a855f7"></div>
+          Sum outputs (S₀–S₃)
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
