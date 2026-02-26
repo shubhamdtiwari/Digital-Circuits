@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MUX & DEMUX</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap");
+      :root {
+        --bg: #08080f;
+        --panel: #0d0d18;
+        --border: #1a1a30;
+        --teal: #00e5c8;
+        --teal-dim: #00b09c;
+        --amber: #ffb300;
+        --amber-dim: #cc8e00;
+        --pink: #ff4d8d;
+        --blue: #4d9fff;
+        --purple: #9b59ff;
+        --green: #39d98a;
+        --text: #ccd6f6;
+        --dim: #3a3a5c;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: var(--bg);
+        font-family: "Space Mono", monospace;
+        color: var(--text);
+        min-height: 100vh;
+        padding: 20px;
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(
+            ellipse at 10% 30%,
+            rgba(0, 229, 200, 0.04) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            ellipse at 90% 70%,
+            rgba(255, 179, 0, 0.04) 0%,
+            transparent 50%
+          );
+        pointer-events: none;
+      }
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 1;
+      }
+
+      h1 {
+        font-family: "Orbitron", sans-serif;
+        font-size: 1.5rem;
+        font-weight: 900;
+        background: linear-gradient(90deg, var(--teal), var(--amber));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-align: center;
+        letter-spacing: 5px;
+        margin-bottom: 4px;
+        filter: drop-shadow(0 0 20px rgba(0, 229, 200, 0.3));
+      }
+      .sub {
+        text-align: center;
+        color: var(--dim);
+        font-size: 0.7rem;
+        letter-spacing: 3px;
+        margin-bottom: 28px;
+      }
+
+      .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+        margin-bottom: 20px;
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .card-header {
+        padding: 11px 18px;
+        font-family: "Orbitron", sans-serif;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 3px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .card-header.mux {
+        background: linear-gradient(
+          90deg,
+          rgba(0, 229, 200, 0.12),
+          transparent
+        );
+        color: var(--teal);
+        border-bottom: 1px solid rgba(0, 229, 200, 0.2);
+      }
+      .card-header.demux {
+        background: linear-gradient(
+          90deg,
+          rgba(255, 179, 0, 0.12),
+          transparent
+        );
+        color: var(--amber);
+        border-bottom: 1px solid rgba(255, 179, 0, 0.2);
+      }
+      .card-body {
+        padding: 0;
+      }
+
+      svg {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      /* truth tables */
+      .tables-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+        margin-bottom: 20px;
+      }
+      .tt-card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .tt-header {
+        padding: 10px 16px;
+        font-family: "Orbitron", sans-serif;
+        font-size: 0.65rem;
+        letter-spacing: 2px;
+        border-bottom: 1px solid var(--border);
+      }
+      .tt-header.mux {
+        color: var(--teal);
+      }
+      .tt-header.demux {
+        color: var(--amber);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.78rem;
+      }
+      th {
+        padding: 8px 14px;
+        color: var(--dim);
+        border-bottom: 1px solid var(--border);
+        font-weight: 400;
+        text-align: center;
+      }
+      td {
+        padding: 7px 14px;
+        text-align: center;
+        border-bottom: 1px solid rgba(26, 26, 48, 0.6);
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      td.sel {
+        color: var(--blue);
+      }
+      td.out-mux {
+        color: var(--teal);
+      }
+      td.out-demux {
+        color: var(--amber);
+      }
+      td.zero {
+        color: var(--dim);
+      }
+
+      /* applications */
+      .apps {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 14px;
+        margin-bottom: 20px;
+      }
+      .app-card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px 16px;
+      }
+      .app-title {
+        font-family: "Orbitron", sans-serif;
+        font-size: 0.6rem;
+        letter-spacing: 2px;
+        margin-bottom: 10px;
+      }
+      .app-body {
+        font-size: 0.76rem;
+        line-height: 1.8;
+        color: var(--dim);
+      }
+      .app-body span {
+        color: var(--text);
+      }
+
+      /* boolean expression */
+      .bool-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+        margin-bottom: 20px;
+      }
+      .bool-card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px 20px;
+      }
+      .bool-label {
+        font-family: "Orbitron", sans-serif;
+        font-size: 0.6rem;
+        letter-spacing: 2px;
+        margin-bottom: 12px;
+      }
+      .bool-label.mux {
+        color: var(--teal);
+      }
+      .bool-label.demux {
+        color: var(--amber);
+      }
+      .bool-expr {
+        font-size: 0.82rem;
+        line-height: 2.1;
+      }
+
+      @media (max-width: 700px) {
+        .two-col,
+        .tables-row,
+        .apps,
+        .bool-row {
+          grid-template-columns: 1fr;
+        }
+        h1 {
+          font-size: 1.1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>MUX & DEMUX</h1>
+      <p class="sub">
+        MULTIPLEXER · DEMULTIPLEXER · DATA ROUTING · COMBINATIONAL LOGIC
+      </p>
+
+      <!-- ═══ MAIN DIAGRAMS ═══ -->
+      <div class="two-col">
+        <!-- MUX -->
+        <div class="card">
+          <div class="card-header mux">▶ MULTIPLEXER — MANY TO ONE</div>
+          <div class="card-body">
+            <svg viewBox="0 0 460 480" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker
+                  id="mt"
+                  markerWidth="7"
+                  markerHeight="5"
+                  refX="6"
+                  refY="2.5"
+                  orient="auto"
+                >
+                  <polygon points="0 0,7 2.5,0 5" fill="#00e5c8" />
+                </marker>
+                <marker
+                  id="mb"
+                  markerWidth="7"
+                  markerHeight="5"
+                  refX="6"
+                  refY="2.5"
+                  orient="auto"
+                >
+                  <polygon points="0 0,7 2.5,0 5" fill="#4d9fff" />
+                </marker>
+                <marker
+                  id="mg"
+                  markerWidth="7"
+                  markerHeight="5"
+                  refX="6"
+                  refY="2.5"
+                  orient="auto"
+                >
+                  <polygon points="0 0,7 2.5,0 5" fill="#39d98a" />
+                </marker>
+                <marker
+                  id="mp"
+                  markerWidth="7"
+                  markerHeight="5"
+                  refX="6"
+                  refY="2.5"
+                  orient="auto"
+                >
+                  <polygon points="0 0,7 2.5,0 5" fill="#9b59ff" />
+                </marker>
+                <marker
+                  id="mpi"
+                  markerWidth="7"
+                  markerHeight="5"
+                  refX="6"
+                  refY="2.5"
+                  orient="auto"
+                >
+                  <polygon points="0 0,7 2.5,0 5" fill="#ff4d8d" />
+                </marker>
+              </defs>
+              <rect width="460" height="480" fill="#0d0d18" />
+
+              <!-- Title: 4:1 MUX -->
+              <text
+                x="230"
+                y="22"
+                text-anchor="middle"
+                font-family="'Orbitron',sans-serif"
+                font-size="10"
+                fill="#00e5c8"
+                letter-spacing="3"
+              >
+                4 : 1 MULTIPLEXER
+              </text>
+
+              <!-- The MUX trapezoid body -->
+              <!-- Trapezoid: wider on input side, narrower on output -->
+              <polygon
+                points="160,50 300,80 300,300 160,330"
+                fill="#0d1a18"
+                stroke="#00e5c8"
+                stroke-width="2"
+              />
+              <!-- inner label -->
+              <text
+                x="225"
+                y="178"
+                text-anchor="middle"
+                font-family="'Orbitron',sans-serif"
+                font-size="11"
+                fill="#00e5c8"
+                letter-spacing="2"
+                font-weight="700"
+              >
+                MUX
+              </text>
+              <text
+                x="225"
+                y="196"
+                text-anchor="middle"
+                font-family="'Space Mono',monospace"
+                font-size="9"
+                fill="#3a3a5c"
+              >
+                4:1
+              </text>
+
+              <!-- INPUT LINES I0–I3 on left side -->
+              <!-- I0 line -->
+              <line
+                x1="60"
+                y1="100"
+                x2="163"
+                y2="100"
+                stroke="#00e5c8"
+                stroke-width="2"
+                marker-end="url(#mt)"
+              />
+              <text
+                x="50"
+                y="104"
+                text-anchor="end"
+                font-family="'Space Mono',monospace"
+                font-size="12"
+                fill="#00e5c8"
+              >
+                I₀
+              </text>
+              <!-- I1 line -->
+              <line
+                x1="60"
+                y1="160"
+                x2="163"
+                y2="160"
+                stroke="#00e5c8"
+                stroke-width="2"
+                marker-end="url(#mt)"
+              />
+              <text
+                x="50"
+                y="164"
+                text-anchor="end"
+                font-family="'Space Mono',monospace"
+                font-size="12"
+                fill="#00e5c8"
+              >
+                I₁
+              </text>
+              <!-- I2 line -->
+              <line
+                x1="60"
+                y1="220"
+                x2="163"
+                y2="220"
+                stroke="#00e5c8"
+                stroke-width="2"
+                marker-end="url(#mt)"
+              />
+              <text
+                x="50"
+                y="224"
+                text-anchor="end"
+                font-family="'Space Mono',monospace"
+                font-size="12"
+                fill="#00e5c8"
+              >
+                I₂
+              </text>
+              <!-- I3 line -->
+              <line
+                x1="60"
+                y1="280"
+                x2="163"
+                y2="280"
+                stroke="#00e5c8"
+                stroke-width="2"
+                marker-end="url(#mt)"
+              />
+              <text
+                x="50"
+                y="284"
+                text-anchor="end"
+                font-family="'Space Mono',monospace"
+                font-size="12"
+                fill="#00e5c8"
+              >
+                I₃
+              </text>
+
+              <!-- INPUT labels on line -->
+              <g
+                font-family="'Space Mono',monospace"
+                font-size="9"
+                fill="#3a3a5c"
+              >
+                <text x="105" y="95">Data In 0</text>
+                <text x="105" y="155">Data In 1</text>
+                <text x="105" y="215">Data In 2</text>
+                <text x="105" y="275">Data In 3</text>
+              </g>
+
+              <!-- OUTPUT line on right -->
+              <line
+                x1="300"
+                y1="190"
+                x2="400"
+                y2="190"
+                stroke="#39d98a"
+                stroke-width="2.5"
+                marker-end="url(#mg)"
+              />
+              <text
+                x="408"
+                y="194"
+                font-family="'Space Mono',monospace"
+                font-size="13"
+                font-weight="bold"
+                fill="#39d98a"
+              >
+                Y
+              </text>
+              <text
+                x="335"
+                y="182"
+                font-family="'Space Mono',monospace"
+                font-size="9"
+                fill="#3a3a5c"
+              >
+                Output
+              </text>
+
+              <!-- SELECT LINES S0, S1 at bottom -->
+              <line
+                x1="210"
+                y1="390"
+                x2="210"
+                y2="328"
+                stroke="#4d9fff"
+                stroke-width="2"
+                marker-end="url(#mb)"
+              />
+              <line
+                x1="240"
+                y1="390"
+                x2="240"
+                y2="328"
+                stroke="#4d9fff"
+                stroke-width="2"
+                marker-end="url(#mb)"
+              />
+              <text
+                x="210"
+                y="406"
+                text-anchor="middle"
+                font-family="'Space Mono',monospace"
+                font-size="12"
+                fill="#4d9fff"
+              >
+                S₀
+              </text>
+              <text
+                x="240"
+                y="406"
+                text-anchor="middle"
+                font-family="'Space Mono',monospace"
+                font-size="12"
+                fill="#4d9fff"
+              >
+                S₁
+              </text>
+              <text
+                x="225"
+                y="425"
+                text-anchor="middle"
+                font-family="'Space Mono',monospace"
+                font-size="9"
+                fill="#3a3a5c"
+              >
+                Select Lines (2 for 4:1)
+              </text>
+
+              <!-- Selection truth mini-table inside -->
+              <rect
+                x="162"
+                y="210"
+                width="136"
+                height="82"
+                rx="4"
+                fill="#08080f"
+                stroke="#1a1a30"
+                stroke-width="1"
+              />
+              <text
+                x="230"
+                y="225"
+                text-anchor="middle"
+                font-family="'Space Mono',monospace"
+                font-size="8"
+                fill="#3a3a5c"
+              >
+                S₁ S₀ → Y
+              </text>
+              <line
+                x1="165"
+                y1="229"
+                x2="295"
+                y2="229"
+                stroke="#1a1a30"
+                stroke-width="1"
+              />
+              <g font-family="'Space Mono',monospace" font-size="9">
+                <text x="185" y="243" fill="#4d9fff">0 0</text>
+                <text x="250" y="243" fill="#00e5c8">→ I₀</text>
+                <text x="185" y="257" fill="#4d9fff">0 1</text>
+                <text x="250" y="257" fill="#00e5c8">→ I₁</text>
+                <text x="185" y="271" fill="#4d9fff">1 0</text>
+                <text x="250" y="271" fill="#00e5c8">→ I₂</text>
+                <text x="185" y="285" fill="#4d9fff">1 1</text>
+                <text x="250" y="285" fill="#00e5c8">→ I₃</text>
+              </g>
+
+              <!-- "ANALOG" to concept box -->
+              <rect
+                x="20"
+                y="436"
+                width="420"
+                height="38"
+                rx="6"
+                fill="#0a1210"
+                stroke="#00e5c8"
+                stroke-width="1"
+                stroke-dasharray="4,2"
+              />
+              <text
+                x="230"
+                y="452"
+                text-anchor="middle"
+                font-family="'Space Mono',monospace"
+                font-size="9"
+                fill="#3a3a5c"
+              >
+                Analogy: a rotary switch — many inputs, one output,
+              </text>
+              <text
+                x="230"
+                y="466"
+                text-anchor="middle"
+                font-family="'Space Mono',monospace"
+                font-size="9"
+                fill="#00e5c8"
+              >
+                the dial (select lines) decides which passes through
+              </text>
+            </svg>
+          </div>
+        </div>
+
+        <!-- DEMUX -->
+        <div class="card">
+          <div class="card-header demux">◀ DEMULTIPLEXER — ONE TO MANY</div>
+          <div class="card-body">
+            <svg viewBox="0 0 460 480" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker
+                  id="da"
+                  markerWidth="7"
+                  markerHeight="5"
+                  refX="6"
+                  refY="2.5"
+                  orient="auto"
+                >
+                  <polygon points="0 0,7 2.5,0 5" fill="#ffb300" />
+                </marker>
+                <marker
+                  id="db"
+                  markerWidth="7"
+                  markerHeight="5"
+                  refX="6"
+                  refY="2.5"
+                  orient="auto"
+                >
+                  <polygon points="0 0,7 2.5,0 5" fill="#4d9fff" />
+                </marker>
+                <marker
+                  id="dg"
+                  markerWidth="7"
+                  markerHeight="5"
+                  refX="6"
+                  refY="2.5"
+                  orient="auto"
+                >
+                  <polygon points="0 0,7 2.5,0 5" fill="#ff4d8d" />
+                </marker>
+              </defs>
+              <rect width="460" height="480" fill="#0d0d18" />
+
+              <text
+                x="230"
+                y="22"
+                text-anchor="middle"
+                font-family="'Orbitron',sans-serif"
+                font-size="10"
+                fill="#ffb300"
+                letter-spacing="3"
+              >
+                1 : 4 DEMULTIPLEXER
+              </text>
+
+              <!-- DEMUX trapezoid (reversed — narrower on left, wider on right) -->
+              <polygon
+                points="160,80 300,50 300,330 160,300"
+                fill="#1a1208"
+                stroke="#ffb300"
+                stroke-width="2"
+              />
+              <text
+                x="225"
+                y="178"
+                text-anchor="middle"
+                font-family="'Orbitron',sans-serif"
+                font-size="11"
+                fill="#ffb300"
+                letter-spacing="2"
+                font-weight="700"
+              >
+                DEMUX
+              </text>
+              <text
+                x="225"
+                y="196"
+                text-anchor="middle"
+                font-family="'Space Mono',monospace"
+                font-size="9"
+                fill="#3a3a5c"
+              >
+                1:4
+              </text>
+
+              <!-- INPUT on left side -->
+              <line
+                x1="60"
+                y1="190"
+                x2="163"
+                y2="190"
+                stroke="#ff4d8d"
+                stroke-width="2.5"
+                marker-end="url(#dg)"
+              />
+              <text
+                x="48"
+                y="194"
+                text-anchor="end"
+                font-family="'Space Mono',monospace"
+                font-size="13"
+                font-weight="bold"
+                fill="#ff4d8d"
+              >
+                D
+              </text>
+              <text
+                x="65"
+                y="183"
+                font-family="'Space Mono',monospace"
+                font-size="9"
+                fill="#3a3a5c"
+              >
+                Input
+              </text>
+
+              <!-- OUTPUTS on right side Y0-Y3 -->
+              <line
+                x1="300"
+                y1="100"
+                x2="400"
+                y2="100"
+                stroke="#ffb300"
+                stroke-width="2"
+                marker-end="url(#da)"
+              />
+              <text
+                x="408"
+                y="104"
+                font-family="'Space Mono',monospace"
+                font-size="12"
+                fill="#ffb300"
+              >
+                Y₀
+              </text>
+              <line
+                x1="300"
+                y1="160"
+                x2="400"
+                y2="160"
+                stroke="#ffb300"
+                stroke-width="2"
+                marker-end="url(#da)"
+              />
+              <text
+                x="408"
+                y="164"
+                font-family="'Space Mono',monospace"
+                font-size="12"
+                fill="#ffb300"
+              >
+                Y₁
+              </text>
+              <line
+                x1="300"
+                y1="220"
+                x2="400"
+                y2="220"
+                stroke="#ffb300"
+                stroke-width="2"
+                marker-end="url(#da)"
+              />
+              <text
+                x="408"
+                y="224"
+                font-family="'Space Mono',monospace"
+                font-size="12"
+                fill="#ffb300"
+              >
+                Y₂
+              </text>
+              <line
+                x1="300"
+                y1="280"
+                x2="400"
+                y2="280"
+                stroke="#ffb300"
+                stroke-width="2"
+                marker-end="url(#da)"
+              />
+              <text
+                x="408"
+                y="284"
+                font-family="'Space Mono',monospace"
+                font-size="12"
+                fill="#ffb300"
+              >
+                Y₃
+              </text>
+
+              <!-- "active" indicator on Y1 (example S=01) -->
+              <rect
+                x="402"
+                y="148"
+                width="50"
+                height="26"
+                rx="4"
+                fill="#1a1208"
+                stroke="#ffb300"
+                stroke-width="1.5"
+              />
+              <text
+                x="427"
+                y="165"
+                text-anchor="middle"
+                font-family="'Space Mono',monospace"
+                font-size="9"
+                fill="#ffb300"
+              >
+                = D
+              </text>
+              <rect
+                x="402"
+                y="88"
+                width="50"
+                height="26"
+                rx="4"
+                fill="#08080f"
+                stroke="#3a3a5c"
+                stroke-width="1"
+              />
+              <text
+                x="427"
+                y="105"
+                text-anchor="middle"
+                font-family="'Space Mono',monospace"
+                font-size="9"
+                fill="#3a3a5c"
+              >
+                = 0
+              </text>
+              <rect
+                x="402"
+                y="208"
+                width="50"
+                height="26"
+                rx="4"
+                fill="#08080f"
+                stroke="#3a3a5c"
+                stroke-width="1"
+              />
+              <text
+                x="427"
+                y="225"
+                text-anchor="middle"
+                font-family="'Space Mono',monospace"
+                font-size="9"
+                fill="#3a3a5c"
+              >
+                = 0
+              </text>
+              <rect
+                x="402"
+                y="268"
+                width="50"
+                height="26"
+                rx="4"
+                fill="#08080f"
+                stroke="#3a3a5c"
+                stroke-width="1"
+              />
+              <text
+                x="427"
+                y="285"
+                text-anchor="middle"
+                font-family="'Space Mono',monospace"
+                font-size="9"
+                fill="#3a3a5c"
+              >
+                = 0
+              </text>
+              <text
+                x="430"
+                y="322"
+                font-family="'Space Mono',monospace"
+                font-size="8"
+                fill="#3a3a5c"
+              >
+                when S=01
+              </text>
+
+              <!-- SELECT LINES -->
+              <line
+                x1="210"
+                y1="390"
+                x2="210"
+                y2="298"
+                stroke="#4d9fff"
+                stroke-width="2"
+                marker-end="url(#db)"
+              />
+              <line
+                x1="240"
+                y1="390"
+                x2="240"
+                y2="298"
+                stroke="#4d9fff"
+                stroke-width="2"
+                marker-end="url(#db)"
+              />
+              <text
+                x="210"
+                y="406"
+                text-anchor="middle"
+                font-family="'Space Mono',monospace"
+                font-size="12"
+                fill="#4d9fff"
+              >
+                S₀
+              </text>
+              <text
+                x="240"
+                y="406"
+                text-anchor="middle"
+                font-family="'Space Mono',monospace"
+                font-size="12"
+                fill="#4d9fff"
+              >
+                S₁
+              </text>
+              <text
+                x="225"
+                y="425"
+                text-anchor="middle"
+                font-family="'Space Mono',monospace"
+                font-size="9"
+                fill="#3a3a5c"
+              >
+                Select Lines (2 for 1:4)
+              </text>
+
+              <!-- Selection truth mini-table -->
+              <rect
+                x="162"
+                y="210"
+                width="136"
+                height="82"
+                rx="4"
+                fill="#08080f"
+                stroke="#1a1a30"
+                stroke-width="1"
+              />
+              <text
+                x="230"
+                y="225"
+                text-anchor="middle"
+                font-family="'Space Mono',monospace"
+                font-size="8"
+                fill="#3a3a5c"
+              >
+                S₁ S₀ → active
+              </text>
+              <line
+                x1="165"
+                y1="229"
+                x2="295"
+                y2="229"
+                stroke="#1a1a30"
+                stroke-width="1"
+              />
+              <g font-family="'Space Mono',monospace" font-size="9">
+                <text x="185" y="243" fill="#4d9fff">0 0</text>
+                <text x="250" y="243" fill="#ffb300">→ Y₀</text>
+                <text x="185" y="257" fill="#4d9fff">0 1</text>
+                <text x="250" y="257" fill="#ffb300">→ Y₁</text>
+                <text x="185" y="271" fill="#4d9fff">1 0</text>
+                <text x="250" y="271" fill="#ffb300">→ Y₂</text>
+                <text x="185" y="285" fill="#4d9fff">1 1</text>
+                <text x="250" y="285" fill="#ffb300">→ Y₃</text>
+              </g>
+
+              <rect
+                x="20"
+                y="436"
+                width="420"
+                height="38"
+                rx="6"
+                fill="#120e06"
+                stroke="#ffb300"
+                stroke-width="1"
+                stroke-dasharray="4,2"
+              />
+              <text
+                x="230"
+                y="452"
+                text-anchor="middle"
+                font-family="'Space Mono',monospace"
+                font-size="9"
+                fill="#3a3a5c"
+              >
+                Analogy: a railroad switch — one track splits to many,
+              </text>
+              <text
+                x="230"
+                y="466"
+                text-anchor="middle"
+                font-family="'Space Mono',monospace"
+                font-size="9"
+                fill="#ffb300"
+              >
+                the switch (select lines) decides which track is active
+              </text>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOOLEAN EXPRESSIONS -->
+      <div class="bool-row">
+        <div class="bool-card">
+          <div class="bool-label mux">4:1 MUX — BOOLEAN EXPRESSION</div>
+          <div class="bool-expr">
+            <span style="color: #00e5c8">Y</span> =
+            <span style="color: #4d9fff">S₁'S₀'</span>·<span
+              style="color: #00e5c8"
+              >I₀</span
+            >
+            + <span style="color: #4d9fff">S₁'S₀</span>·<span
+              style="color: #00e5c8"
+              >I₁</span
+            >
+            + <span style="color: #4d9fff">S₁S₀'</span>·<span
+              style="color: #00e5c8"
+              >I₂</span
+            >
+            + <span style="color: #4d9fff">S₁S₀</span>·<span
+              style="color: #00e5c8"
+              >I₃</span
+            ><br /><br />
+            <span style="color: #3a3a5c"
+              >Each select combination acts as an AND gate — only the selected
+              input passes through to Y.</span
+            ><br /><br />
+            <span style="color: #9b59ff">Gate count:</span> 4 AND gates + 1 OR
+            gate + 2 NOT gates
+          </div>
+        </div>
+        <div class="bool-card">
+          <div class="bool-label demux">1:4 DEMUX — BOOLEAN EXPRESSIONS</div>
+          <div class="bool-expr">
+            <span style="color: #ffb300">Y₀</span> =
+            <span style="color: #ff4d8d">D</span>·<span style="color: #4d9fff"
+              >S₁'S₀'</span
+            ><br />
+            <span style="color: #ffb300">Y₁</span> =
+            <span style="color: #ff4d8d">D</span>·<span style="color: #4d9fff"
+              >S₁'S₀</span
+            ><br />
+            <span style="color: #ffb300">Y₂</span> =
+            <span style="color: #ff4d8d">D</span>·<span style="color: #4d9fff"
+              >S₁S₀'</span
+            ><br />
+            <span style="color: #ffb300">Y₃</span> =
+            <span style="color: #ff4d8d">D</span>·<span style="color: #4d9fff"
+              >S₁S₀</span
+            ><br /><br />
+            <span style="color: #3a3a5c"
+              >Only one output is active at a time. Input D passes to the
+              selected output; all others are 0.</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- TRUTH TABLES -->
+      <div class="tables-row">
+        <div class="tt-card">
+          <div class="tt-header mux">4:1 MUX — TRUTH TABLE</div>
+          <table>
+            <thead>
+              <tr>
+                <th style="color: #4d9fff">S₁</th>
+                <th style="color: #4d9fff">S₀</th>
+                <th style="color: #00e5c8">Output Y</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="sel">0</td>
+                <td class="sel">0</td>
+                <td class="out-mux">I₀</td>
+              </tr>
+              <tr>
+                <td class="sel">0</td>
+                <td class="sel">1</td>
+                <td class="out-mux">I₁</td>
+              </tr>
+              <tr>
+                <td class="sel">1</td>
+                <td class="sel">0</td>
+                <td class="out-mux">I₂</td>
+              </tr>
+              <tr>
+                <td class="sel">1</td>
+                <td class="sel">1</td>
+                <td class="out-mux">I₃</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="tt-card">
+          <div class="tt-header demux">1:4 DEMUX — TRUTH TABLE</div>
+          <table>
+            <thead>
+              <tr>
+                <th style="color: #4d9fff">S₁</th>
+                <th style="color: #4d9fff">S₀</th>
+                <th style="color: #ffb300">Y₀</th>
+                <th style="color: #ffb300">Y₁</th>
+                <th style="color: #ffb300">Y₂</th>
+                <th style="color: #ffb300">Y₃</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="sel">0</td>
+                <td class="sel">0</td>
+                <td class="out-demux">D</td>
+                <td class="zero">0</td>
+                <td class="zero">0</td>
+                <td class="zero">0</td>
+              </tr>
+              <tr>
+                <td class="sel">0</td>
+                <td class="sel">1</td>
+                <td class="zero">0</td>
+                <td class="out-demux">D</td>
+                <td class="zero">0</td>
+                <td class="zero">0</td>
+              </tr>
+              <tr>
+                <td class="sel">1</td>
+                <td class="sel">0</td>
+                <td class="zero">0</td>
+                <td class="zero">0</td>
+                <td class="out-demux">D</td>
+                <td class="zero">0</td>
+              </tr>
+              <tr>
+                <td class="sel">1</td>
+                <td class="sel">1</td>
+                <td class="zero">0</td>
+                <td class="zero">0</td>
+                <td class="zero">0</td>
+                <td class="out-demux">D</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- APPLICATIONS -->
+      <div class="apps">
+        <div class="app-card" style="border-top: 2px solid var(--teal)">
+          <div class="app-title" style="color: var(--teal)">
+            MUX APPLICATIONS
+          </div>
+          <div class="app-body">
+            <span>Data Routing</span> — select which data source reaches the
+            bus<br />
+            <span>Function Generator</span> — implement any Boolean function<br />
+            <span>Parallel→Serial</span> — convert parallel data to serial
+            stream<br />
+            <span>Signal Selection</span> — pick one of multiple sensor signals
+          </div>
+        </div>
+        <div class="app-card" style="border-top: 2px solid var(--amber)">
+          <div class="app-title" style="color: var(--amber)">
+            DEMUX APPLICATIONS
+          </div>
+          <div class="app-body">
+            <span>Data Distribution</span> — send one source to multiple
+            destinations<br />
+            <span>Memory Decoding</span> — select which memory chip is active<br />
+            <span>Serial→Parallel</span> — convert serial data to parallel<br />
+            <span>Display Drivers</span> — drive one of many output devices
+          </div>
+        </div>
+        <div class="app-card" style="border-top: 2px solid var(--purple)">
+          <div class="app-title" style="color: var(--purple)">
+            MUX AS UNIVERSAL LOGIC
+          </div>
+          <div class="app-body">
+            A <span>4:1 MUX</span> can implement any 3-variable Boolean function
+            by connecting input variables to select lines and setting data
+            inputs to 0 or 1.<br /><br />
+            An <span>8:1 MUX</span> can implement any 4-variable function —
+            making MUX a universal logic element!
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
